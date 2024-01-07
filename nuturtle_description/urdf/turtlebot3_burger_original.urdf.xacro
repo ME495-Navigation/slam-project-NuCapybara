@@ -32,7 +32,15 @@
     <color rgba="0.0 0.8 0.0 1.0"/>
   </material>
 
-  <material name="grey">wheel_radius
+  <material name="grey">
+    <color rgba="0.5 0.5 0.5 1.0"/>
+  </material>
+
+  <material name="orange">
+    <color rgba="1.0 0.4235 0.0392 1.0"/>
+  </material>
+
+  <material name="brown">
     <color rgba="0.8706 0.8118 0.7647 1.0"/>
   </material>
 
@@ -56,12 +64,7 @@
     <visual>
       <origin xyz="-0.032 0 0.0" rpy="0 0 0"/>
       <geometry>
-        <xacro:if value="${collision_radius&gt;0}">
-          <cylinder radius="${collision_radius}" length="0.081"/>
-        </xacro:if>
-        <xacro:if value="${collision_radius&lt;0}">
-          <mesh filename="file://$(find nuturtle_description)/burger_base.stl" scale="0.001 0.001 0.001"/>
-        </xacro:if>
+        <mesh filename="file://$(find nuturtle_description)/burger_base.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="light_black"/>
     </visual>
@@ -83,7 +86,7 @@
   <joint name="wheel_left_joint" type="continuous">
     <parent link="base_link"/>
     <child link="wheel_left_link"/>
-    <origin xyz="0.0 ${track_width/2} 0.023" rpy="-1.57 0 0"/>
+    <origin xyz="0.0 0.08 0.023" rpy="-1.57 0 0"/>
     <axis xyz="0 0 1"/>
   </joint>
 
@@ -91,7 +94,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="1.57 0 0"/>
       <geometry>
-        <mesh filename="file://$(find nuturtle_description)/left_tire.stl" scale="${wheel_radius} 0.001 ${wheel_radius}"/>
+        <mesh filename="file://$(find nuturtle_description)/left_tire.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>
@@ -113,7 +116,7 @@
   <joint name="wheel_right_joint" type="continuous">
     <parent link="base_link"/>
     <child link="wheel_right_link"/>
-    <origin xyz="0.0 ${-1*track_width/2} 0.023" rpy="-1.57 0 0"/>
+    <origin xyz="0.0 -0.080 0.023" rpy="-1.57 0 0"/>
     <axis xyz="0 0 1"/>
   </joint>
 
@@ -121,7 +124,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="1.57 0 0"/>
       <geometry>
-        <mesh filename="file://$(find nuturtle_description)/right_tire.stl" scale="${wheel_radius} 0.001 ${wheel_radius}"/>
+        <mesh filename="file://$(find nuturtle_description)/right_tire.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>

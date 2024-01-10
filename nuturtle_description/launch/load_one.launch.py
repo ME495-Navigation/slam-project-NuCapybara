@@ -18,6 +18,10 @@ def generate_launch_description():
     DeclareLaunchArgument(name = "use_rviz",
                         default_value = "true",
                         description = "control whether rviz is launched"),
+    DeclareLaunchArgument(name = "color",
+                        default_value = "purple",
+                        description = "the color of the baselink",
+                        choices=["purple","red","green","blue"]),
 
     Node(
     package='robot_state_publisher',
@@ -26,7 +30,11 @@ def generate_launch_description():
        {"robot_description" :
         Command([ExecutableInPackage("xacro", "xacro"), " ",
                  PathJoinSubstitution(
-                [FindPackageShare("nuturtle_description"), "turtlebot3_burger.urdf.xacro"])])},       
+                [FindPackageShare("nuturtle_description"), "turtlebot3_burger.urdf.xacro"]),
+                " ",
+                "color:=",
+                LaunchConfiguration("color"),
+                ])},       
     ]
     ),
     Node(

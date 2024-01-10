@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
 <robot name="turtlebot3_burger"
   xmlns:xacro="http://ros.org/wiki/xacro">
+<xacro:arg name="color" default="purple"/>
 <xacro:property name="prop" value="${xacro.load_yaml('$(find nuturtle_description)/diff_params.yaml')['/**']
 ['ros__parameters']}"/>
 <xacro:property name="wheel_radius" value="${prop['wheel_radius']}"/>
@@ -44,6 +45,10 @@
     <color rgba="1.0 1.0 1.0 1.0"/>
   </material>
 
+  <material name="purple">
+    <color rgba="0.3 0.16 0.52 1.0"/>
+  </material>
+
   <link name="base_footprint"/>
 
   <joint name="base_joint" type="fixed">
@@ -56,20 +61,20 @@
     <visual>
       <origin xyz="-0.032 0 0.0" rpy="0 0 0"/>
       <geometry>
-        <xacro:if value="${collision_radius&gt;0}">
-          <cylinder radius="${collision_radius}" length="0.081"/>
-        </xacro:if>
-        <xacro:if value="${collision_radius&lt;0}">
           <mesh filename="file://$(find nuturtle_description)/burger_base.stl" scale="0.001 0.001 0.001"/>
-        </xacro:if>
       </geometry>
-      <material name="light_black"/>
+      <material name="$(arg color)"/>
     </visual>
 
     <collision>
       <origin xyz="-0.032 0 0.070" rpy="0 0 0"/>
       <geometry>
-        <box size="0.140 0.140 0.143"/>
+        <xacro:if value="${collision_radius&gt;0}">
+          <cylinder radius="${collision_radius}" length="0.081"/>
+        </xacro:if>
+        <xacro:if value="${collision_radius&lt;0}">
+          <box size="0.140 0.140 0.143"/>
+        </xacro:if>
       </geometry>
     </collision>
 

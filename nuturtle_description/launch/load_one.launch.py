@@ -1,9 +1,10 @@
 from launch import LaunchDescription
 from launch.conditions import IfCondition
-from launch.substitutions import EqualsSubstitution, LaunchConfiguration, PathJoinSubstitution, Command
+from launch.substitutions import EqualsSubstitution, LaunchConfiguration, PathJoinSubstitution, Command, TextSubstitution
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument 
 from launch_ros.substitutions import FindPackageShare, ExecutableInPackage
+
 
 #use Xacro files to make life easier
 def generate_launch_description():
@@ -34,7 +35,8 @@ def generate_launch_description():
                 " ",
                 "color:=",
                 LaunchConfiguration("color"),
-                ])},       
+                ])}, 
+       {"frame_prefix" : [LaunchConfiguration("color"), TextSubstitution(text="/")]},
     ]
     ),
     Node(

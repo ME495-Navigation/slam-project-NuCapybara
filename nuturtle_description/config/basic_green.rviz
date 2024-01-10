@@ -104,14 +104,14 @@ Visualization Manager:
         Inertia: false
         Mass: false
       Name: RobotModel
-      TF Prefix: purple
+      TF Prefix: green
       Update Interval: 0
       Value: true
       Visual Enabled: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: purple/base_footprint
+    Fixed Frame: green/base_footprint
     Frame Rate: 30
   Name: root
   Tools:

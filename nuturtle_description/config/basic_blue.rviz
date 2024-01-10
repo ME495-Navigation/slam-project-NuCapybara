@@ -104,14 +104,14 @@ Visualization Manager:
         Inertia: false
         Mass: false
       Name: RobotModel
-      TF Prefix: purple
+      TF Prefix: blue
       Update Interval: 0
       Value: true
       Visual Enabled: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: purple/base_footprint
+    Fixed Frame: blue/base_footprint
     Frame Rate: 30
   Name: root
   Tools:
@@ -154,7 +154,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 0.3644788861274719
+      Distance: 0.17224709689617157
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1

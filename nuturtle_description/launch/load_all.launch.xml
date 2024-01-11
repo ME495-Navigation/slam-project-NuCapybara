@@ -1,14 +1,21 @@
   <launch>
     <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py">
         <arg name="color" value="red"/>
+        <arg name="use_rviz" value="false"/>
     </include>
     <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py">
         <arg name="color" value="green"/>
+        <arg name="use_rviz" value="false"/>
     </include>  
     <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py">
         <arg name="color" value="blue"/>
+        <arg name="use_rviz" value="false"/>
     </include>
     <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py">
         <arg name="color" value="purple"/>
-    </include>  
+        <arg name="use_rviz" value="false"/>
+    </include>
+    
+    <node pkg="rviz2" exec="rviz2" args="-d $(find-pkg-share nuturtle_description)/basic_all.rviz"/>
+    
   </launch>

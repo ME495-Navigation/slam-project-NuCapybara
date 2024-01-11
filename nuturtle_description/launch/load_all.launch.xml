@@ -1,0 +1,14 @@
+  <launch>
+    <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py">
+        <arg name="color" value="red"/>
+    </include>
+    <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py">
+        <arg name="color" value="green"/>
+    </include>  
+    <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py">
+        <arg name="color" value="blue"/>
+    </include>
+    <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py">
+        <arg name="color" value="purple"/>
+    </include>  
+  </launch>

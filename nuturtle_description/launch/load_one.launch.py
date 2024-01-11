@@ -1,21 +1,22 @@
-from launch import LaunchDescription
+from launch import LaunchDescription, action
 from launch.conditions import IfCondition
 from launch.substitutions import EqualsSubstitution, LaunchConfiguration, PathJoinSubstitution, Command, TextSubstitution
 from launch_ros.actions import Node
-from launch.actions import DeclareLaunchArgument 
+from launch.actions import DeclareLaunchArgument, SetLaunchConfiguration
 from launch_ros.substitutions import FindPackageShare, ExecutableInPackage
+from launch.events import Shutdown
 
 
 #use Xacro files to make life easier
 def generate_launch_description():
-    
+   
    return LaunchDescription([   
     DeclareLaunchArgument(name = "use_jsp",
                           default_value = "true",
                           description="use_jsp: if true, then joint state publisher is used to publish joint states"),
-    DeclareLaunchArgument(name = "rviz_config",
-                          default_value = "basic_purple.rviz",
-                          description = "rviz_config <file_name>"),
+   #  DeclareLaunchArgument(name = "rviz_config",
+   #                        default_value = "basic_purple.rviz",
+   #                        description = "rviz_config <file_name>"),
     DeclareLaunchArgument(name = "use_rviz",
                         default_value = "true",
                         description = "control whether rviz is launched"),
@@ -23,6 +24,7 @@ def generate_launch_description():
                         default_value = "purple",
                         description = "the color of the baselink",
                         choices=["purple","red","green","blue"]),
+    SetLaunchConfiguration(name = "rviz_config", value = ["basic_",  LaunchConfiguration("color"), ".rviz"]),
 
     Node(
     package='robot_state_publisher',
@@ -52,7 +54,12 @@ def generate_launch_description():
     arguments=[
        '-d',
         PathJoinSubstitution([FindPackageShare("nuturtle_description"),LaunchConfiguration("rviz_config")]),
-    ]
+    " ",
+    "-f",
+    [LaunchConfiguration("color"), "/base_footprint"],
+    ],
+    condition=IfCondition(EqualsSubstitution(LaunchConfiguration("use_rviz"), "true")),
+    on_exit=Shutdown(),
     ),
     
     

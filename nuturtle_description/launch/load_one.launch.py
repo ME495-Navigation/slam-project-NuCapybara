@@ -1,8 +1,8 @@
-from launch import LaunchDescription, action
+from launch import LaunchDescription
 from launch.conditions import IfCondition
 from launch.substitutions import EqualsSubstitution, LaunchConfiguration, PathJoinSubstitution, Command, TextSubstitution
-from launch_ros.actions import Node
-from launch.actions import DeclareLaunchArgument, SetLaunchConfiguration
+from launch_ros.actions import Node, PushRosNamespace
+from launch.actions import DeclareLaunchArgument, SetLaunchConfiguration, GroupAction
 from launch_ros.substitutions import FindPackageShare, ExecutableInPackage
 from launch.events import Shutdown
 
@@ -11,56 +11,62 @@ from launch.events import Shutdown
 def generate_launch_description():
    
    return LaunchDescription([   
-    DeclareLaunchArgument(name = "use_jsp",
-                          default_value = "true",
-                          description="use_jsp: if true, then joint state publisher is used to publish joint states"),
-   #  DeclareLaunchArgument(name = "rviz_config",
-   #                        default_value = "basic_purple.rviz",
-   #                        description = "rviz_config <file_name>"),
-    DeclareLaunchArgument(name = "use_rviz",
+      GroupAction(
+         actions=[
+            DeclareLaunchArgument(name = "use_jsp",
                         default_value = "true",
-                        description = "control whether rviz is launched"),
-    DeclareLaunchArgument(name = "color",
-                        default_value = "purple",
-                        description = "the color of the baselink",
-                        choices=["purple","red","green","blue"]),
-    SetLaunchConfiguration(name = "rviz_config", value = ["basic_",  LaunchConfiguration("color"), ".rviz"]),
+                        description="use_jsp: if true, then joint state publisher is used to publish joint states"),
 
-    Node(
-    package='robot_state_publisher',
-    executable='robot_state_publisher',
-    parameters=[
-       {"robot_description" :
-        Command([ExecutableInPackage("xacro", "xacro"), " ",
-                 PathJoinSubstitution(
-                [FindPackageShare("nuturtle_description"), "turtlebot3_burger.urdf.xacro"]),
-                " ",
-                "color:=",
-                LaunchConfiguration("color"),
-                ])}, 
-       {"frame_prefix" : [LaunchConfiguration("color"), TextSubstitution(text="/")]},
-    ]
-    ),
-    Node(
-    package='joint_state_publisher',
-    executable='joint_state_publisher',
-    name='jsp',
-    condition=IfCondition(EqualsSubstitution(LaunchConfiguration("use_jsp"), "true"))
-    ),
-    Node(
-    package='rviz2',
-    executable='rviz2',
-    name='rviz',
-    arguments=[
-       '-d',
-        PathJoinSubstitution([FindPackageShare("nuturtle_description"),LaunchConfiguration("rviz_config")]),
-    " ",
-    "-f",
-    [LaunchConfiguration("color"), "/base_footprint"],
-    ],
-    condition=IfCondition(EqualsSubstitution(LaunchConfiguration("use_rviz"), "true")),
-    on_exit=Shutdown(),
-    ),
+            DeclareLaunchArgument(name = "use_rviz",
+                              default_value = "true",
+                              description = "control whether rviz is launched"),
+            DeclareLaunchArgument(name = "color",
+                              default_value = "purple",
+                              description = "the color of the baselink",
+                              choices=["purple","red","green","blue"]),
+            SetLaunchConfiguration(name = "rviz_config", value = ["basic_",  LaunchConfiguration("color"), ".rviz"]),
+            
+            Node(
+               package='robot_state_publisher',
+               executable='robot_state_publisher',
+               name='rsp',
+               parameters=[
+                  {"robot_description" :
+                  Command([ExecutableInPackage("xacro", "xacro"), " ",
+                           PathJoinSubstitution(
+                           [FindPackageShare("nuturtle_description"), "turtlebot3_burger.urdf.xacro"]),
+                           " ",
+                           "color:=",
+                           LaunchConfiguration("color"),
+                           ])}, 
+                  {"frame_prefix" : [LaunchConfiguration("color"), TextSubstitution(text="/")]},
+               ]
+            ),
+            Node(
+               package='joint_state_publisher',
+               executable='joint_state_publisher',
+               name='jsp',
+               condition=IfCondition(EqualsSubstitution(LaunchConfiguration("use_jsp"), "true"))
+            ),
+            Node(
+               package='rviz2',
+               executable='rviz2',
+               name='rviz',
+               arguments=[
+                  '-d',
+                  PathJoinSubstitution([FindPackageShare("nuturtle_description"),LaunchConfiguration("rviz_config")]),
+               " ",
+               "-f",
+               [LaunchConfiguration("color"), "/base_footprint"],
+               ],
+               condition=IfCondition(EqualsSubstitution(LaunchConfiguration("use_rviz"), "true")),
+               on_exit=Shutdown(),
+            ),
+                     
+         ]
+      ),
+
+      
     
     
-    ])
+   ])

@@ -24,12 +24,21 @@ def generate_launch_description():
                               default_value = "purple",
                               description = "the color of the baselink",
                               choices=["purple","red","green","blue"]),
+            DeclareLaunchArgument(name = "x",
+                              default_value = "0",
+                              description = "the x of robot",
+                              ),
+            DeclareLaunchArgument(name = "y",
+                              default_value = "0",
+                              description = "the y of robot",
+                              ),
+
             SetLaunchConfiguration(name = "rviz_config", value = ["basic_",  LaunchConfiguration("color"), ".rviz"]),
-            
             Node(
                package='robot_state_publisher',
                executable='robot_state_publisher',
                name='rsp',
+               namespace=LaunchConfiguration("color"),
                parameters=[
                   {"robot_description" :
                   Command([ExecutableInPackage("xacro", "xacro"), " ",
@@ -39,29 +48,38 @@ def generate_launch_description():
                            "color:=",
                            LaunchConfiguration("color"),
                            ])}, 
-                  {"frame_prefix" : [LaunchConfiguration("color"), TextSubstitution(text="/")]},
+                  # {"frame_prefix" : [LaunchConfiguration("color"), TextSubstitution(text="/")]},
+                  {"frame_prefix" : [LaunchConfiguration("color"), "/"]},
                ]
             ),
             Node(
                package='joint_state_publisher',
                executable='joint_state_publisher',
                name='jsp',
-               condition=IfCondition(EqualsSubstitution(LaunchConfiguration("use_jsp"), "true"))
+               namespace=LaunchConfiguration("color"),
+               condition=IfCondition(EqualsSubstitution(LaunchConfiguration("use_jsp"), "true")),
             ),
             Node(
                package='rviz2',
                executable='rviz2',
+               namespace=LaunchConfiguration("color"),
                name='rviz',
                arguments=[
                   '-d',
                   PathJoinSubstitution([FindPackageShare("nuturtle_description"),LaunchConfiguration("rviz_config")]),
-               " ",
-               "-f",
-               [LaunchConfiguration("color"), "/base_footprint"],
+                  " ",
+                  "-f",
+                  [LaunchConfiguration("color"), "/base_footprint"],
                ],
                condition=IfCondition(EqualsSubstitution(LaunchConfiguration("use_rviz"), "true")),
                on_exit=Shutdown(),
             ),
+            Node(
+               package='tf2_ros',
+               executable='static_transform_publisher',
+               arguments = ['--x', LaunchConfiguration("x"), '--y', LaunchConfiguration("y"), '--z', '0', '--yaw', '0', '--pitch', '0', '--roll', '0', '--frame-id', 'nusim/world', '--child-frame-id', [LaunchConfiguration("color"), "/base_footprint"]]
+            ),
+            
                      
          ]
       ),

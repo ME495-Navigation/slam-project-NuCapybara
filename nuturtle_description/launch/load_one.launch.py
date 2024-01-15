@@ -37,7 +37,7 @@ def generate_launch_description():
             Node(
                package='robot_state_publisher',
                executable='robot_state_publisher',
-               name='rsp',
+               name='robot_state_publisher',
                namespace=LaunchConfiguration("color"),
                parameters=[
                   {"robot_description" :
@@ -55,7 +55,7 @@ def generate_launch_description():
             Node(
                package='joint_state_publisher',
                executable='joint_state_publisher',
-               name='jsp',
+               name='joint_state_publisher',
                namespace=LaunchConfiguration("color"),
                condition=IfCondition(EqualsSubstitution(LaunchConfiguration("use_jsp"), "true")),
             ),
@@ -77,6 +77,7 @@ def generate_launch_description():
             Node(
                package='tf2_ros',
                executable='static_transform_publisher',
+               namespace=LaunchConfiguration("color"),
                arguments = ['--x', LaunchConfiguration("x"), '--y', LaunchConfiguration("y"), '--z', '0', '--yaw', '0', '--pitch', '0', '--roll', '0', '--frame-id', 'nusim/world', '--child-frame-id', [LaunchConfiguration("color"), "/base_footprint"]]
             ),
             

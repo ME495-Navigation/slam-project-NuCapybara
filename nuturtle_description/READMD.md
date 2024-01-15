@@ -7,7 +7,8 @@ URDF files for Nuturtle *turtlebot3_burger.urdf.xacro*
 ![](images/rqt_graph.svg)
 # Launch File Details
 * ` ros2 launch nuturtle_description load_one.launch.py --show-args`
-  ```Arguments (pass arguments as '<name>:=<value>'):
+  ```
+    Arguments (pass arguments as '<name>:=<value>'):
 
     'use_jsp':
         use_jsp: if true, then joint state publisher is used to publish joint states
@@ -29,7 +30,8 @@ URDF files for Nuturtle *turtlebot3_burger.urdf.xacro*
         the y of robot
         (default: '0')```
 * `ros2 launch nuturtle_description load_all.launch.xml --show-args`
-```Arguments (pass arguments as '<name>:=<value>'):
+```
+    Arguments (pass arguments as '<name>:=<value>'):
 
     'use_jsp':
         use_jsp: if true, then joint state publisher is used to publish joint states
@@ -51,4 +53,4 @@ URDF files for Nuturtle *turtlebot3_burger.urdf.xacro*
         the y of robot
         (default: '0')
 `
-  `<Output of the Above Command>```
+  `<Output of the Above Command>`git p``

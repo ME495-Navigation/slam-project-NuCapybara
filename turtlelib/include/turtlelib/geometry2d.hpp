@@ -5,6 +5,9 @@
 
 
 #include <iosfwd> // contains forward definitions for iostream objects
+#include <cmath>
+
+
 namespace turtlelib
 {
     /// \brief PI.  Not in C++ standard until C++20.
@@ -21,7 +24,7 @@ namespace turtlelib
     /// if given a compile-time constant as input
     constexpr bool almost_equal(double d1, double d2, double epsilon=1.0e-12)
     {
-        if(abs(d1 - d2) < epsilon){
+        if(std::abs(d1 - d2) < epsilon){
             return true;
         }
         else{
@@ -34,7 +37,7 @@ namespace turtlelib
     /// \returns radians
     constexpr double deg2rad(double deg)
     {
-        double radians;
+        double radians = 0.0;
         radians = deg/180*PI;
         return radians;
     }
@@ -44,7 +47,7 @@ namespace turtlelib
     /// \returns the angle in degrees
     constexpr double rad2deg(double rad)
     {
-        double degree;
+        double degree = 0.0;
         degree = rad/PI*180;
         return degree;
     }

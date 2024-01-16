@@ -1,36 +1,20 @@
 cmake_minimum_required(VERSION 3.22)
+project(turtlelib)
+add_library(turtlelib src/geometry.cpp)
 
 
-project(project_name)
-
-
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-
-
-add_library(libname src/libfile1.cpp src/libfile2.cpp)
-
-
-target_include_directories(libname
+target_include_directories(turtlelib
     PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
     $<INSTALL_INTERFACE:include/>)
 
+# enable C++ 17
+target_compile_features(turtlelib PUBLIC cxx_std_17) 
 
-target_compile_features(libname PUBLIC cxx_std_17)
+# warnings are your friend!
+target_compile_options(turtlelib PUBLIC -Wall -Wextra -Wpedantic)
 
-add_executable(Name src/Name_main.cpp)
-
-target_link_libraries(Name Eigen3::Eigen libname)
-
-
-install(DIRECTORY include/mylibrary DESTINATION include)
-
-install(TARGETS Name libname EXPORT project_name-targets)
-
-install(EXPORT project_name-targets
-        FILE project_name-config.cmake
-        NAMESPACE project_name::
-        DESTINATION lib/cmake/${PROJECT_NAME})
+install(DIRECTORY include/turtlelib DESTINATION include)
 
 find_package(Doxygen)
 
@@ -49,3 +33,4 @@ if(${DOXYGEN_FOUND} AND ${BUILD_DOCS})
     # The documentation will be in the build/html directory
     # The main page is build/html/index.html
 endif()
+

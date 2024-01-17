@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 project(turtlelib)
-add_library(turtlelib src/geometry.cpp)
+add_library(turtlelib src/geometry2d.cpp)
 
 
 target_include_directories(turtlelib
@@ -15,6 +15,13 @@ target_compile_features(turtlelib PUBLIC cxx_std_17)
 target_compile_options(turtlelib PUBLIC -Wall -Wextra -Wpedantic)
 
 install(DIRECTORY include/turtlelib DESTINATION include)
+
+find_package(Catch2 3 REQUIRED)
+
+include(CTest)
+add_executable(turtlelib_test tests/test_geometry2d.cpp)
+target_link_libraries(turtlelib_test turtlelib Catch2::Catch2WithMain)
+add_test(NAME Test_of_Turtlelib COMMAND turtlelib_test)
 
 find_package(Doxygen)
 

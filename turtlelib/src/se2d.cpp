@@ -78,9 +78,6 @@ namespace turtlelib
             return Vector2D{new_x, new_y};
         }
 
-        /// \brief apply a transformation to a Twist2D (e.g. using the adjoint)
-        /// \param v - the twist to transform
-        /// \return a twist in the new coordinate system
         Twist2D operator()(Twist2D v) const{
             Twist2D newTwist;
             newTwist.x = v.x;
@@ -89,8 +86,6 @@ namespace turtlelib
             return newTwist;
         }
 
-        /// \brief invert the transformation
-        /// \return the inverse transformation.
         Transform2D inv() const{
             Transform2D newTrans;
             newTrans.linear.x = -x*cos(angular)-y*sin(angular);
@@ -100,10 +95,6 @@ namespace turtlelib
             return newTrans;
         }
 
-        /// \brief compose this transform with another and store the result
-        /// in this object
-        /// \param rhs - the first transform to apply
-        /// \return a reference to the newly transformed operator
         Transform2D & Transform2D::operator*=(const Transform2D & rhs){
             const auto new_angular = angular + rhs.angular;
             const auto new_x = rhs.linear.x*cos(angular) - rhs.linear.y*sin(angular) + linear.x;
@@ -115,16 +106,11 @@ namespace turtlelib
             return *this;
         }
 
-
-        /// \brief the translational component of the transform
-        /// \return the x,y translation
         Vector2D translation() const{
             return linear;
         }
 
 
-        /// \brief get the angular displacement of the transform
-        /// \return the angular displacement, in radians
         double rotation() const{
             return angular;
         }
@@ -132,18 +118,11 @@ namespace turtlelib
     };
 
 
-    /// \brief should print a human readable version of the transform:
-    /// An example output:
-    /// deg: 90 x: 3 y: 5
-    /// \param os - an output stream
-    /// \param tf - the transform to print
     std::ostream & operator<<(std::ostream & os, const Transform2D & tf){
         os << "deg: " << tf.angular <<  " x: " << tf.linear.x << " y: " << tf.linear.y; 
     }
 
-    /// \brief Read a transformation from stdin
-    /// Should be able to read input either as output by operator<< or
-    /// as 3 numbers (degrees, dx, dy) separated by spaces or newlines
+
     std::istream & operator>>(std::istream & is, Transform2D & tf){
         // Remove whitespace
         is >> std::ws;
@@ -161,11 +140,7 @@ namespace turtlelib
         return is;
     }
 
-    /// \brief multiply two transforms together, returning their composition
-    /// \param lhs - the left hand operand
-    /// \param rhs - the right hand operand
-    /// \return the composition of the two transforms
-    /// HINT: This function should be implemented in terms of *=
+
     Transform2D operator*(Transform2D lhs, const Transform2D & rhs){
         return lhs*=rhs;
     }

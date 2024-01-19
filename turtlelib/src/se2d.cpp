@@ -5,17 +5,6 @@
 namespace turtlelib
 {
 
-    {
-        /// \brief the angular velocity
-        double omega = 0.0;
-
-        /// \brief the linear x velocity
-        double x = 0.0;
-
-        /// \brief the linear y velocity
-        double y = 0.0;
-    };
-
     std::ostream & operator<<(std::ostream & os, const Twist2D & tw){
         os << "[" << tw.omega << " " << tw.x << " " <<  tw.y << "]";
         return os;
@@ -72,13 +61,13 @@ namespace turtlelib
             return newPt;
         }
 
-        Vector2D operator()(Vector2D v) const{
+        Transform2D::Vector2D operator()(Vector2D v) const{
             const auto new_x = v.x*cos(angular)-sin(angular)*v.y; //for vector there is no translation
             const auto new_y = v.x*sin(angular)+cos(angular)*v.y;
             return Vector2D{new_x, new_y};
         }
 
-        Twist2D operator()(Twist2D v) const{
+        Transform2D::Twist2D operator()(Twist2D v) const{
             Twist2D newTwist;
             newTwist.x = v.x;
             newTwist.y = v.x*linear.y + v.y*cos(angular)-v.omega*sin(angular);
@@ -86,7 +75,7 @@ namespace turtlelib
             return newTwist;
         }
 
-        Transform2D inv() const{
+        Transform2D::Transform2D inv() const{
             Transform2D newTrans;
             newTrans.linear.x = -x*cos(angular)-y*sin(angular);
             newTrans.linear.y = -y*cos(angular)+x*sin(angular);
@@ -95,7 +84,7 @@ namespace turtlelib
             return newTrans;
         }
 
-        Transform2D & Transform2D::operator*=(const Transform2D & rhs){
+        Transform2D::Transform2D & Transform2D::operator*=(const Transform2D & rhs){
             const auto new_angular = angular + rhs.angular;
             const auto new_x = rhs.linear.x*cos(angular) - rhs.linear.y*sin(angular) + linear.x;
             const auto new_y = rhs.linear.x*sin(angular) + rhs.linear.y*cos(angular) + linear.y;
@@ -106,16 +95,16 @@ namespace turtlelib
             return *this;
         }
 
-        Vector2D translation() const{
+        Transform2D::Vector2D translation() const{
             return linear;
         }
 
 
-        double rotation() const{
+        Transform2D::double rotation() const{
             return angular;
         }
 
-    };
+
 
 
     std::ostream & operator<<(std::ostream & os, const Transform2D & tf){
@@ -145,6 +134,6 @@ namespace turtlelib
         return lhs*=rhs;
     }
 
+};
 
-
-#endif
+#endi

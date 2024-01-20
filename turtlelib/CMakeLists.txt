@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 project(turtlelib)
-add_library(turtlelib src/geometry2d.cpp)
+add_library(turtlelib src/geometry2d.cpp src/se2d.cpp src/svg.cpp)
 
 
 target_include_directories(turtlelib
@@ -22,6 +22,19 @@ include(CTest)
 add_executable(turtlelib_test tests/test_geometry2d.cpp)
 target_link_libraries(turtlelib_test turtlelib Catch2::Catch2WithMain)
 add_test(NAME Test_of_Turtlelib COMMAND turtlelib_test)
+
+add_executable(se2d_test tests/test_se2d.cpp)
+target_link_libraries(se2d_test turtlelib Catch2::Catch2WithMain)
+add_test(NAME Test_of_se2d COMMAND se2d_test)
+
+add_executable(svg_test tests/test_svg.cpp)
+target_link_libraries(svg_test turtlelib Catch2::Catch2WithMain)
+add_test(NAME Test_of_svg COMMAND svg_test)
+
+add_executable(frame_main src/frame_main.cpp)
+target_link_libraries(frame_main turtlelib Catch2::Catch2WithMain)
+add_test(NAME frame_main COMMAND frame_main_test)
+
 
 find_package(Doxygen)
 

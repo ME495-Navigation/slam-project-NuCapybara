@@ -13,7 +13,7 @@ namespace turtlelib
 {
 
     TEST_CASE("Empty Constructor", "[transform]")
-    { //Stella
+    { 
         Transform2D Tran;
         REQUIRE(Tran.translation().x == 0.0);
         REQUIRE(Tran.translation().y == 0.0);
@@ -22,7 +22,7 @@ namespace turtlelib
 
 
     TEST_CASE("Translation Only Constructor", "[transform]")
-    { // Stella
+    { 
         double my_x = 5;
         double my_y = 6;
         Transform2D T(Vector2D{my_x, my_y});
@@ -32,7 +32,7 @@ namespace turtlelib
     }
 
     TEST_CASE("Rotation Only Constructor", "[transform]")
-    { // Hughes, Katie
+    { 
         double ang = PI/4;
         Transform2D T(ang);
         REQUIRE(T.rotation() == ang);
@@ -41,7 +41,7 @@ namespace turtlelib
     }
 
     TEST_CASE("Rotation and Translation", "[transform]")
-    { // Hughes, Katie
+    {
         double x = 3.0;
         double y = 5.0;
         double ang = 6.2876;

@@ -2,6 +2,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <cmath>
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -13,6 +14,7 @@
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2_ros/transform_broadcaster.h"
+
 
 
 using namespace std::chrono_literals;
@@ -31,14 +33,14 @@ class Nusim : public rclcpp::Node
     rate_hz = get_parameter("rate").as_double();
     std::chrono::milliseconds rate = (std::chrono::milliseconds) ((int)(1000. / rate_hz));
 
-    declare_parameter("x0", 0.);
-    x0 = get_parameter("x0").as_double();
+    declare_parameter("x", 0.);
+    x = get_parameter("x").as_double();
 
-    declare_parameter("y0", 0.);
-    y0 = get_parameter("y0").as_double();
+    declare_parameter("y", 0.);
+    y = get_parameter("y").as_double();
 
-    declare_parameter("theta0", 0.);
-    theta0 = get_parameter("theta0").as_double();
+    declare_parameter("theta", 0.);
+    theta = get_parameter("theta").as_double();
 
     declare_parameter("arena_x_length", 0.);
     arena_x_length = get_parameter("arena_x_length").as_double();
@@ -57,9 +59,9 @@ class Nusim : public rclcpp::Node
 
 
     initial = true;
-    init_x = 0.0;
-    init_y = 0.0;
-    init_theta = 0.0;
+    x0 = 0.0;
+    y0 = 0.0;
+    theta0 = 0.0;
     timer_ = create_wall_timer(
     rate, std::bind(&Nusim::timer_callback, this));
     //timestep publisher
@@ -74,8 +76,9 @@ class Nusim : public rclcpp::Node
     teleport_ = create_service<nusim::srv::Teleport>("~/teleport", std::bind(&Nusim::teleport, this, std::placeholders::_1, std::placeholders::_2));
     
     //wall publisher
-    wall_pub = create_publisher<visualization_msgs::msg::MarkerArray>("~/walls", 10);
-    obs_pub = create_publisher<visualization_msgs::msg::MarkerArray>("~/obstacles", 10);
+    rclcpp::QoS qos_policy = rclcpp::QoS(rclcpp::KeepLast(10)).transient_local();
+    wall_pub = create_publisher<visualization_msgs::msg::MarkerArray>("~/walls", qos_policy);
+    obs_pub = create_publisher<visualization_msgs::msg::MarkerArray>("~/obstacles", qos_policy);
     }
 
 
@@ -85,9 +88,9 @@ class Nusim : public rclcpp::Node
     {
      //if its the first time calling initial, set the initial location
       if(initial){
-        init_x = x0;
-        init_y = y0;
-        init_theta = theta0;
+        x0 = x;
+        y0 = y;
+        theta0 = theta;
         initial = false;
       } 
       // publish timetsep  
@@ -95,7 +98,7 @@ class Nusim : public rclcpp::Node
       message.data = timestep_;
       time_step_publisher_->publish(message);
       timestep_++;
-      send_transform(x0, y0, theta0);
+      send_transform(x, y, theta);
 
       wallPub();
       obstacle_publisher();
@@ -107,10 +110,10 @@ class Nusim : public rclcpp::Node
      std::shared_ptr<std_srvs::srv::Empty::Response>){
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "RESET IS GOING ON!");
         timestep_ = 0;
-        RCLCPP_INFO_STREAM(get_logger(), "reset x=" << init_x << " y=" << init_y << " theta=" << init_theta);
-        x0 = init_x;
-        y0 = init_y;
-        theta0 = init_theta;
+        RCLCPP_INFO_STREAM(get_logger(), "reset x=" << x0 << " y=" << y0 << " theta=" << theta0);
+        x = x0;
+        y = y0;
+        theta = theta0;
     }
 
     //broadcast the location by giving x y w
@@ -135,10 +138,10 @@ class Nusim : public rclcpp::Node
     void teleport(
         std::shared_ptr<nusim::srv::Teleport::Request> req,
         std::shared_ptr<nusim::srv::Teleport::Response> res){
-        x0 = req->x;
-        y0 = req->y;
-        theta0 = req->theta;
-        RCLCPP_INFO_STREAM(get_logger(), "Teleporting service as x=" << x0 << " y=" << y0 << " theta=" << theta0);
+        x = req->x;
+        y = req->y;
+        theta = req->theta;
+        RCLCPP_INFO_STREAM(get_logger(), "Teleporting service as x=" << x << " y=" << y << " theta=" << theta0);
         res->success = true;
         }
 
@@ -162,11 +165,7 @@ class Nusim : public rclcpp::Node
             arr.markers.at(i).color.b = 0.0;
             arr.markers.at(i).color.a = 1.0;
             //wall scale
-            arr.markers.at(i).scale.x = 0.0;
-            arr.markers.at(i).scale.y = 0.0;
             arr.markers.at(i).scale.z = 0.25;
-            arr.markers.at(i).pose.position.x = 0.0;
-            arr.markers.at(i).pose.position.y = 0.0;
             arr.markers.at(i).pose.position.z = 0.125;
         }
         const auto wall_thickness = 0.1;
@@ -224,12 +223,12 @@ class Nusim : public rclcpp::Node
         }
         obs_pub->publish(arr_obstacle);
     }
-    double x0, y0, theta0, rate_hz;
+    double x, y, theta, rate_hz;
     double arena_x_length, arena_y_length;
     std::vector<double> obx, oby;
     double obr;
     bool initial;
-    double init_x, init_y, init_theta;
+    double x0, y0, theta0;
     size_t timestep_;
     size_t cyl_num;
 

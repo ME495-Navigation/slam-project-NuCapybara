@@ -8,4 +8,4 @@
     obstacles/y: [-0.7, -0.8, 0.8]
     obstacles/r: 0.038
     arena_x_length: 5.0
-    arena_Y_length: 5.0
+    arena_y_length: 5.0

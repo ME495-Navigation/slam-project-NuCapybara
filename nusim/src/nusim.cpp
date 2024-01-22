@@ -147,26 +147,27 @@ class Nusim : public rclcpp::Node
 
     void wallPub(){
         visualization_msgs::msg::MarkerArray arr;
-        visualization_msgs::msg::Marker m1, m2, m3, m4;
-        arr.markers.push_back(m1);
-        arr.markers.push_back(m2);
-        arr.markers.push_back(m3);
-        arr.markers.push_back(m4);
+        visualization_msgs::msg::Marker m;
 
         for(int i = 0; i < 4; i++){
-            arr.markers.at(i).header.stamp = this->get_clock()->now();
-            arr.markers.at(i).header.frame_id = "nusim/world";
-            arr.markers.at(i).id = i;
-            arr.markers.at(i).type = 1;
-            arr.markers.at(i).action = 0;
+            m.header.stamp = this->get_clock()->now();
+            m.header.frame_id = "nusim/world";
+            m.id = i;
+            m.type = 1;
+            m.action = 0;
 
-            arr.markers.at(i).color.r = 1.0;
-            arr.markers.at(i).color.g = 0.0;
-            arr.markers.at(i).color.b = 0.0;
-            arr.markers.at(i).color.a = 1.0;
+            m.color.r = 1.0;
+            m.color.g = 0.0;
+            m.color.b = 0.0;
+            m.color.a = 1.0;
             //wall scale
-            arr.markers.at(i).scale.z = 0.25;
-            arr.markers.at(i).pose.position.z = 0.125;
+            m.scale.x = 0.0;
+            m.scale.y = 0.0;
+            m.scale.z = 0.25;
+            m.pose.position.x = 0.0;
+            m.pose.position.y = 0.0;
+            m.pose.position.z = 0.125;
+            arr.markers.push_back(m);
         }
         const auto wall_thickness = 0.1;
 
@@ -185,6 +186,27 @@ class Nusim : public rclcpp::Node
         arr.markers.at(3).scale.x = arena_x_length + 2 * wall_thickness;
         arr.markers.at(3).scale.y = wall_thickness;
         arr.markers.at(3).pose.position.y = -0.5 * (arena_y_length + wall_thickness);
+
+        // arr.markers.at(0).scale.x = arena_x_length;
+        // arr.markers.at(0).scale.y = wall_thickness;
+        // arr.markers.at(0).pose.position.x = 0;
+        // arr.markers.at(0).pose.position.y = -0.5 * (arena_y_length + wall_thickness);
+
+        // arr.markers.at(1).scale.x = arena_x_length;
+        // arr.markers.at(1).scale.y = wall_thickness;
+        // arr.markers.at(1).pose.position.x = 0;
+        // arr.markers.at(1).pose.position.y = 0.5 * (arena_y_length + wall_thickness);
+
+
+        // arr.markers.at(2).scale.x = wall_thickness;
+        // arr.markers.at(2).scale.y = arena_y_length;
+        // arr.markers.at(2).pose.position.x = 0.5 * (arena_x_length + wall_thickness);
+        // arr.markers.at(2).pose.position.y = 0;
+
+        // arr.markers.at(3).scale.x = wall_thickness;
+        // arr.markers.at(3).scale.y = arena_y_length;
+        // arr.markers.at(3).pose.position.x = -0.5 * (arena_x_length + wall_thickness);
+        // arr.markers.at(3).pose.position.y = 0;
 
         wall_pub->publish(arr);
     }

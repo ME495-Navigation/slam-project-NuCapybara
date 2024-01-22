@@ -26,7 +26,7 @@ namespace turtlelib{
             //consume "["
             is.get();
             //the next one for input is p.x
-            is >> p.x;
+            is >> p.x;t
             // is >> trash;
             is >> p.y;
         }

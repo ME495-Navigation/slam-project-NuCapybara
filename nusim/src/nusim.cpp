@@ -43,6 +43,16 @@ class Nusim : public rclcpp::Node
     arena_y_length = get_parameter("arena_y_length").as_double();
     double arena_height = 0.25;
 
+    declare_parameter("obstacles/x", std::vector<double>{});
+    obx = get_parameter("obstacles/x").as_double_array();
+
+    declare_parameter("obstacles/y", std::vector<double>{});
+    oby = get_parameter("obstacles/y").as_double_array();
+
+    declare_parameter("obstacles/r", 0.0);
+    obr = get_parameter("obstacles/r").as_double();
+
+
     bool initial = true;
     double init_x = 0.0;
     double init_y = 0.0;
@@ -62,6 +72,7 @@ class Nusim : public rclcpp::Node
     
     //wall publisher
     wall_pub = create_publisher<visualization_msgs::msg::Marker_array>("~/walls", 10);
+    obs_pub = create_publisher<visualization_msgs::msg::Marker_array>("~/obstacles", 10);
     }
 
 
@@ -77,11 +88,14 @@ class Nusim : public rclcpp::Node
         initial = false;
       } 
       // publish timetsep  
-      auto message = std_msgs::msg::UInt64();
+      auto message = std_msgs::msg::UInt64();n_Cylinders
       message.data = timestep_;
       time_step_publisher_->publish(message);
       timestep_++;
       send_transform(x0, y0, theta0);
+
+      wallPub();
+      obstacle_publisher();
     }
 
 
@@ -134,8 +148,8 @@ class Nusim : public rclcpp::Node
             arr.markers.at(i).header.stamp = this->get_clock()->now();
             arr.markers.at(i).header.frame_id = "nusim/world";
             arr.markers.at(i).id = i;
-            marker.type = visualization_msgs::Marker::CUBE;
-            marker.action = visualization_msgs::Marker::ADD;
+            arr.markers.at(i).type = visualization_msgs::Marker::CUBE;
+            arr.markers.at(i).action = visualization_msgs::Marker::ADD;
 
             arr.markers.at(i).color.r = 1.0;
             arr.markers.at(i).color.g = 0.0;
@@ -170,7 +184,43 @@ class Nusim : public rclcpp::Node
         walls_pub_->publish(arr);
     }
 
-        
+    void obstacle_publisher(){
+        if (oby.size()== obx.size()){
+            RCLCPP_INFO_STREAM(get_logger(), "Valid Marker Input!");
+            cyl_num = oby.size();
+        }
+        else{
+            RCLCPP_INFO_STREAM(get_logger(), "Invalid Marker Input!");
+            cyl_num = 0;
+            return;
+        }
+        visualization_msgs::msg::MarkerArray arr_obstacle;
+        for(int i = 0; i < cyl_num; i++){
+            double x_loc = obx[i];
+            double y_loc = oby[i];
+            visualization_msgs::msg::Marker m;
+            m.header.stamp = this->get_clock()->now();
+            m.header.frame_id = "nusim/world";
+            m.id = i;
+            m.type = 3;
+            m.action = 0;
+
+            m.color.r = 1.0;
+            m.color.g = 0.0;
+            m.color.b = 0.0;
+            m.color.a = 1.0;
+            //wall scale
+            m.scale.x = obr*2;
+            m.scale.y = obr*2;
+            m.scale.z = 0.25;
+            m.pose.position.x = obx[i];
+            m.pose.position.y = oby[i];
+            m.pose.position.z = 0.125;
+            arr_obstacle.push_back(m);
+
+        }
+        obs_pub->publish(arr_obstacle);
+    }    
 
 
 
@@ -179,6 +229,7 @@ class Nusim : public rclcpp::Node
     rclcpp::Publisher<std_msgs::msg::UInt64>::SharedPtr time_step_publisher_;
     rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset_;
     size_t timestep_;
+    size_t cyl_num = 0;
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
     rclcpp::Service<nusim::srv::Teleport>::SharedPtr teleport;
 };

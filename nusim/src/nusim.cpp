@@ -9,6 +9,9 @@
 #include "std_srvs/srv/empty.hpp"
 #include "geometry_msgs/msg/TransformStamped"
 #include "nusim/srv/teleport.hpp"
+#include "visualization_msgs/msg/marker.hpp"
+#include "visualization_msgs/msg/marker_array.hpp"
+
 
 using namespace std::chrono_literals;
 
@@ -25,7 +28,7 @@ class Nusim : public rclcpp::Node
     this->declare_parameter("rate", 200.);
 
     declare_parameter("x0", 0.);
-    x0 = get_parameter("x0").as_double();
+    x0 = get_parameter("x0").as_double();create_publisher
 
     declare_parameter("y0", 0.);
     y0 = get_parameter("y0").as_double();
@@ -47,7 +50,7 @@ class Nusim : public rclcpp::Node
     timer_ = this->create_wall_timer(
       rate, std::bind(&Nusim::timer_callback, this));
     //timestep publisher
-    time_step_publisher_ = this->create_publisher<std_msgs::msg::UInt64>("~/timestep", 10);
+    time_step_publisher_ = create_publisher<std_msgs::msg::UInt64>("~/timestep", 10);
     //service reset
     reset_ = create_service<std_srvs::srv::Empty>("~/reset", std::bind(&Nusim::reset, this, std::placeholders::_1, std::placeholders::_2));
 
@@ -57,6 +60,8 @@ class Nusim : public rclcpp::Node
     //teleport service
     teleport = create_service<nusim::srv::Teleport>("~/teleport", std::bind(&Nusim::teleport, this, std::placeholders::_1, std::placeholders::_2));
     
+    //wall publisher
+    wall_pub = create_publisher<visualization_msgs::msg::Marker_array>("~/walls", 10);
     }
 
 
@@ -80,7 +85,7 @@ class Nusim : public rclcpp::Node
     }
 
 
-    
+
     void reset(std::shared_ptr<std_srvs::srv::Empty::Request>,
      std::shared_ptr<std_srvs::srv::Empty::Response>){
         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "RESET IS GOING ON!");
@@ -117,6 +122,59 @@ class Nusim : public rclcpp::Node
         res->success = true;
         }
 
+    void wallPub(){
+        visualization_msgs::msg::MarkerArray arr;
+        visualization_msgs::msg::Marker m1, m2, m3, m4;
+        MarkerArray.markers.push_back(m1);
+        MarkerArray.markers.push_back(m2);
+        MarkerArray.markers.push_back(m3);
+        MarkerArray.markers.push_back(m4);
+
+        for(int i = 0; i < 4; i++){
+            arr.markers.at(i).header.stamp = this->get_clock()->now();
+            arr.markers.at(i).header.frame_id = "nusim/world";
+            arr.markers.at(i).id = i;
+            marker.type = visualization_msgs::Marker::CUBE;
+            marker.action = visualization_msgs::Marker::ADD;
+
+            arr.markers.at(i).color.r = 1.0;
+            arr.markers.at(i).color.g = 0.0;
+            arr.markers.at(i).color.b = 0.0;
+            arr.markers.at(i).color.a = 1.0;
+            //wall scale
+            arr.markers.at(i).scale.x = 0.0;
+            arr.markers.at(i).scale.y = 0.0;
+            arr.markers.at(i).scale.z = 0.25;
+            arr.markers.at(i).pose.position.x = 0.0;
+            arr.markers.at(i).pose.position.y = 0.0;
+            arr.markers.at(i).pose.position.z = 0.125;
+        }
+        const auto wall_thickness = 0.1;
+
+        arr.markers.at(0).scale.x = wall_thickness;
+        arr.markers.at(0).scale.y = arena_y_length + 2 * wall_thickness;
+        arr.markers.at(0).pose.position.x = 0.5 * (arena_x_length + wall_thickness);
+
+        arr.markers.at(1).scale.x = arena_x_length + 2 * wall_thickness;
+        arr.markers.at(1).scale.y = wall_thickness;
+        arr.markers.at(1).pose.position.y = 0.5 * (arena_y_length + wall_thickness);
+
+        arr.markers.at(2).scale.x = wall_thickness;
+        arr.markers.at(2).scale.y = y_length + 2 * wall_thickness;
+        arr.markers.at(2).pose.position.x = -0.5 * (arena_x_length + wall_thickness);
+
+        arr.markers.at(3).scale.x = arena_x_length + 2 * wall_thickness;
+        arr.markers.at(3).scale.y = wall_thickness;
+        arr.markers.at(3).pose.position.y = -0.5 * (arena_y_length + wall_thickness);
+
+        walls_pub_->publish(arr);
+    }
+
+        
+
+
+
+
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<std_msgs::msg::UInt64>::SharedPtr time_step_publisher_;
     rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset_;
@@ -124,6 +182,7 @@ class Nusim : public rclcpp::Node
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
     rclcpp::Service<nusim::srv::Teleport>::SharedPtr teleport;
 };
+
 
 int main(int argc, char * argv[])
 {

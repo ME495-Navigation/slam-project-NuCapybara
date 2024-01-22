@@ -6,5 +6,4 @@
     theta0: 1.28 
     obstacles/x: [-0.5, 0.8, 0.4]
     obstacles/y: [-0.7, -0.8, 0.8]
-    obstacles/r: 0.038.6
-    
+    obstacles/r: 0.038

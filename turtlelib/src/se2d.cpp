@@ -108,7 +108,8 @@ namespace turtlelib
 
 
     std::ostream & operator<<(std::ostream & os, const Transform2D & tf){
-        os << "deg: " << rad2deg(tf.angular) <<  " x: " << tf.linear.x << " y: " << tf.linear.y; 
+        os << "deg: " << rad2deg(tf.angular) <<  " x: " << tf.linear.x << " y: " << tf.linear.y;
+        return os;
     }
 
 

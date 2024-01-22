@@ -7,9 +7,38 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(visualization_msgs REQUIRED)
+
+rosidl_generate_interfaces(${PROJECT_NAME}_srv
+
+  "srv/Teleport.srv"
+  LIBRARY_NAME ${PROJECT_NAME}
+  #DEPENDENCIES geometry_msgs # Add packages that above messages depend on, in this case geometry_msgs for Sphere.msg
+)
+
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME}_srv "rosidl_typesupport_cpp")
+
+add_executable(nusim src/nusim.cpp)
+
+ament_target_dependencies(nusim rclcpp std_msgs std_srvs tf2 tf2_ros visualization_msgs)
+target_link_libraries(nusim ${cpp_typesupport_target})
+install(TARGETS
+  nusim
+  DESTINATION lib/${PROJECT_NAME})
+
+install(DIRECTORY
+  launch
+  srv
+  config
+  DESTINATION share/${PROJECT_NAME}/
+)
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

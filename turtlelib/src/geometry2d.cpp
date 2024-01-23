@@ -13,7 +13,6 @@ namespace turtlelib{
         ch = is.peek();
         if(ch != '['){
             is >> p.x;
-            // is >> trash;
             is >> p.y;
         }
         // if the first one starts with [

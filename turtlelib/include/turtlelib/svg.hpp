@@ -12,9 +12,9 @@ namespace turtlelib
 
  void OpenTag(std::ostream & os, double width, double height);
  void defTag(std::ostream & os);
- void drawCircle(std::ostream & os, double cx, double cy, double r, std::string stroke);
- void drawVector(std::ostream & os, double x1, double x2, double y1, double y2, std::string stroke);
- void groupTag(std::ostream & os, double x2, double y2, std::string text);
+ void drawCircle(std::ostream & os, Point2D pt, Transform2D t, std::string stroke);
+ void drawVector(std::ostream & os, Vector2D v1, Vector2D v2, Transform2D t, std::string stroke);
+ void groupTag(std::ostream & os, Transform2D t, std::string text);
  void endSvg(std::ostream & os);
 }
 

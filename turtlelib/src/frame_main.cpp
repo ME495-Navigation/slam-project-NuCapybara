@@ -17,13 +17,6 @@ int main(){
     turtlelib::Transform2D Tcb = Tbc.inv();
     turtlelib::Transform2D Tac = Tab*Tbc;
     turtlelib::Transform2D Tca = Tac.inv();
-    ///output all the 
-    // std::cout << "T_{a,b}: " << " deg: " << turtlelib::rad2deg(Tab.rotation()) << " x: "<< Tab.translation().x <<" y: "<< Tab.translation().y << std::endl;
-    // std::cout << "T_{b,a}: " << "deg: " << turtlelib::rad2deg(Tba.rotation()) << " x: "<< Tba.translation().x <<" y: "<< Tba.translation().y << std::endl;
-    // std::cout << "T_{b,c}: " << "deg: " << turtlelib::rad2deg(Tbc.rotation()) << " x: "<< Tbc.translation().x <<" y: "<< Tbc.translation().y << std::endl;
-    // std::cout << "T_{c,b}: " << "deg: " << turtlelib::rad2deg(Tcb.rotation()) << " x: "<< Tcb.translation().x <<" y: "<< Tcb.translation().y << std::endl;
-    // std::cout << "T_{a,c} " << "deg: " << turtlelib::rad2deg(Tac.rotation()) << " x: "<< Tac.translation().x <<" y: "<< Tac.translation().y << std::endl;
-    // std::cout << "T_{c,a}: " << "deg: " << turtlelib::rad2deg(Tca.rotation()) << " x: "<< Tca.translation().x <<" y: "<< Tca.translation().y << std::endl;
 
     std::cout << "T_{a,b}:" << Tab << std::endl;
     std::cout << "T_{b,a}:" << Tba <<  std::endl;

@@ -1,3 +1,27 @@
+/// PARAMETERS:
+///     rate (double): frequency of the timer, in Hz
+///     x0 (double): starting x location of the turtlebot (m)
+///     y0 (double): starting y location of the turtlebot (m)
+///     theta0 (double): starting theta location of the turtlebot (rad)
+///     obstacles/x (double[]): list of x coordinates of cylindrical obstacles (m)
+///     obstacles/y (double[]): list of r coordinates of cylindrical obstacles (m)
+///     obstacles/r (double): radius of cylindrical obstacles (m)
+///     arena_x_length : X length of rectangular arena (m)
+///     arena_y_length : Y length of rectangular arena (m)
+/// PUBLISHES:
+///     ~/timestep (std_msgs::msg::Uint64): current timestep of simulation
+///     ~/obstacles (visualization_msgs::msg::MarkerArray): marker objects representing cylinders
+///     ~/walls (visualization_msgs::msg::MarkerArray): marker objects representing walls of arena
+/// SERVERS:
+///     ~/reset (std_srvs::srv::Empty): resets the simulation to the initial state
+///     ~/teleport (nusim::srv::Teleport): teleports the turtle to a given x, y, theta value
+/// CLIENTS:
+///     none
+/// BROADCASTS:
+///    nusim/world -> red/base_footprint
+
+
+
 #include <chrono>
 #include <functional>
 #include <memory>

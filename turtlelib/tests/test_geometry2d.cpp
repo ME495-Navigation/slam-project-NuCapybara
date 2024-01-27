@@ -144,5 +144,74 @@ TEST_CASE("operator>>", "Point2D)")
   REQUIRE(v5.y == -2.3);
 }
 
+TEST_CASE("operator +=", "Vector"){
+  Vector2D v1{2, 5};
+  Vector2D v2{11, 15};
+  v1 += v2;
+  REQUIRE_THAT(v1.x, Catch::Matchers::WithinAbs(13.0, 1e-5));
+  REQUIRE_THAT(v1.y, Catch::Matchers::WithinAbs(20.0, 1e-5));
+}
 
+TEST_CASE("operator +", "Vector"){
+  Vector2D v1{2, 5};
+  Vector2D v2{11, 15};
+  Vector2D v3 = v1 + v2;
+  REQUIRE_THAT(v3.x, Catch::Matchers::WithinAbs(13.0, 1e-5));
+  REQUIRE_THAT(v3.y, Catch::Matchers::WithinAbs(20.0, 1e-5));
+}
+
+TEST_CASE("operator -", "Vector"){
+  Vector2D v1{2, 5};
+  Vector2D v2{11, 15};
+  Vector2D v3 = v1 - v2;
+  REQUIRE_THAT(v3.x, Catch::Matchers::WithinAbs(-9.0, 1e-5));
+  REQUIRE_THAT(v3.y, Catch::Matchers::WithinAbs(-10.0, 1e-5));
+}
+
+TEST_CASE("operator -=", "Vector"){
+  Vector2D v1{2, 5};
+  Vector2D v2{11, 15};
+  v1 -= v2;
+  REQUIRE_THAT(v1.x, Catch::Matchers::WithinAbs(-9.0, 1e-5));
+  REQUIRE_THAT(v1.y, Catch::Matchers::WithinAbs(-10.0, 1e-5));
+}
+
+TEST_CASE("operator *", "Vector"){
+  Vector2D v1{2, 5};
+  double scalar = 2;
+  Vector2D v3 = v1*scalar;
+  REQUIRE_THAT(v3.x, Catch::Matchers::WithinAbs(4, 1e-5));
+  REQUIRE_THAT(v3.y, Catch::Matchers::WithinAbs(10.0, 1e-5));
+}
+
+
+TEST_CASE("operator *=", "Vector"){
+  Vector2D v1{2, 5};
+  double scalar = 2;
+  v1 *= scalar;
+  REQUIRE_THAT(v1.x, Catch::Matchers::WithinAbs(4, 1e-5));
+  REQUIRE_THAT(v1.y, Catch::Matchers::WithinAbs(10.0, 1e-5));
+}
+
+TEST_CASE("dot", "Vector"){
+  Vector2D v1{2, 5};
+  Vector2D v2{20, 15};
+  double v3 = dot(v1, v2);
+  REQUIRE_THAT(v3, Catch::Matchers::WithinAbs(115, 1e-5));
+}
+
+
+TEST_CASE("magnitude", "Vector"){
+  Vector2D v1{2, 5};
+  double mag = magnitude(v1);
+  REQUIRE_THAT(mag, Catch::Matchers::WithinAbs(5.3851648, 1e-5));
+}
+
+
+TEST_CASE("angle", "Vector"){
+  Vector2D v1{0, 1};
+  Vector2D v2{1, 0};
+  double ang_read  =  angle(v1, v2);
+  REQUIRE_THAT(ang_read, Catch::Matchers::WithinAbs(deg2rad(90), 1e-5));
+}
 }

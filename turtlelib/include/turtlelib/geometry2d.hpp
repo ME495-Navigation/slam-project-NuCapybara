@@ -100,7 +100,40 @@ namespace turtlelib
 
         /// \brief the y coordinate
         double y = 0.0;
+
+        /// \brief add a vector
+        /// \param rhs - the vector to add
+        /// \return a reference to the newly transformed vector
+        Vector2D & operator+=(const Vector2D& rhs);
+
+        /// \brief substract a vector
+        /// \param rhs - the vector to substract
+        /// \return a reference to the newly transformed vector
+        Vector2D & operator-=(const Vector2D & rhs);
+
+        /// \brief multiply a vector
+        /// \param rhs - the vector to multiply
+        /// \return a reference to the newly transformed vector
+        Vector2D & operator*=(const double & scalar);
     };
+
+    /// \brief Adding one vector from another vector
+    /// \param lhs vector on the lefthand side of the operator
+    /// \param rhs vector on the righthand side of the operator
+    /// \return a vector with the adding result
+    Vector2D operator+(const Vector2D& lhs, const Vector2D& rhs);
+
+    /// \brief Substracting one vector from another
+    /// \param lhs lhs vector 
+    /// \param rhs rhs vector
+    /// \return a vector result from substraction
+    Vector2D operator-(const Vector2D& lhs, const Vector2D& rhs);
+
+    /// \brief multiply one vector by a scalar
+    /// \param vec vector being multiplied
+    /// \param scalar scalar being multiplied
+    /// \return a vector
+    Vector2D operator*(Vector2D vec, const double & scalar);
 
     /// \brief Subtracting one point from another yields a vector
     /// \param head point corresponding to the head of the vector
@@ -108,6 +141,23 @@ namespace turtlelib
     /// \return a vector that points from p1 to p2
     /// NOTE: this is not implemented in terms of -= because subtracting two Point2D yields a Vector2D
     Vector2D operator-(const Point2D & head, const Point2D & tail);
+
+    /// @brief The dot product of two vectors
+    /// @param  Vector2D vector 1
+    /// @param  Vector2D vector 2
+    /// @return a double representing dot product of v1 and v2
+    double dot(Vector2D v1, Vector2D v2);
+
+    /// @brief computer the magnitude of the vector
+    /// @param v 
+    /// @return double
+    double magnitude(Vector2D v);
+
+    /// @brief compute the angle between two vectors
+    /// @param v1 
+    /// @param v2 
+    /// @return angle between v1 and v2
+    double angle(Vector2D v1,Vector2D v2);
 
     /// \brief Adding a vector to a point yields a new point displaced by the vector
     /// \param tail The origin of the vector's tail

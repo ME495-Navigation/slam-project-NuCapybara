@@ -94,7 +94,7 @@ namespace turtlelib
         /// \return the angular displacement, in radians
         double rotation() const;
 
-        Transform2D integrate_twist(Twist2D tw);
+        
 
         /// \brief \see operator<<(...) (declared outside this class)
         /// for a description
@@ -122,7 +122,7 @@ namespace turtlelib
     /// HINT: This function should be implemented in terms of *=
     Transform2D operator*(Transform2D lhs, const Transform2D & rhs);
 
-
+    Transform2D integrate_twist(Twist2D tw);
 }
 
 #endif

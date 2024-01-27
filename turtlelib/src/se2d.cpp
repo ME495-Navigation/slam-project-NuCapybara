@@ -144,6 +144,18 @@ Transform2D operator*(Transform2D lhs, const Transform2D & rhs)
   return lhs *= rhs;
 }
 
-
+Transform2D integrate_twist(Twist2D tw){
+  if(tw.omega == 0){
+    return Transform2D(Vector2D{tw.x, tw.y}, 0);
+  }
+  else{
+    const auto xs = tw.y/tw.omega;
+    const auto ys = -tw.x/tw.omega;
+    Transform2D T_sb = Transform2D(Vector2D{xs, ys});
+    Transform2D T_ssprime = Transform2D(tw.omega);
+    Transform2D Tbbprime = (T_sb.inv()*T_ssprime)*T_sb;
+    return Tbbprime;
+  }
+}
 
 }

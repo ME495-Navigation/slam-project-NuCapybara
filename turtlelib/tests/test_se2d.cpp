@@ -2,6 +2,7 @@
 #include <iostream>
 #include "turtlelib/se2d.hpp"
 #include "turtlelib/geometry2d.hpp"
+#include "turtlelib/diff_drive.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <string>
@@ -150,4 +151,111 @@ TEST_CASE("Inverting a transform", "[transform2D]") {    //Kyle Wang
       REQUIRE_THAT(Tbbprime.translation().y, Catch::Matchers::WithinAbs(-1.05645265317421, 1e-5));
       REQUIRE_THAT(Tbbprime.rotation(), Catch::Matchers::WithinAbs(-1.24, 1e-5));
   }
+
+
+  // TEST_CASE("Drive forward", "DiffDrive"){
+  //       double track = 1.0;
+  //       double rad = 1.0;
+  //       DiffDrive dd(track, rad);
+  //       REQUIRE(dd.get_current_config().translation().x  == 0);
+  //       REQUIRE(dd.get_current_config().translation().y  == 0);
+  //       REQUIRE(dd.get_current_config().rotation() == 0);
+  //       REQUIRE(dd.get_wheel_state().l == 0);
+  //       REQUIRE(dd.get_wheel_state().r == 0);
+  //       // define desired twist: move straight one unit in x direction
+  //       Twist2D tw = Twist2D{0,1.0, 0.0};
+  //       WheelState ws = dd.inverseKinematics(tw);
+  //       REQUIRE_THAT(ws.l, Catch::Matchers::WithinAbs(rad, 1e-5));
+  //       REQUIRE_THAT(ws.r, Catch::Matchers::WithinAbs(rad, 1e-5));
+  //       dd.forwardKinematics(WheelState{ws.l,ws.r});
+  //       REQUIRE_THAT(dd.get_current_config().translation().x, Catch::Matchers::WithinAbs(1.0, 1e-5));
+  //       REQUIRE_THAT(dd.get_current_config().translation().y, Catch::Matchers::WithinAbs(0.0, 1e-5));
+  //       REQUIRE_THAT(dd.get_current_config().rotation(), Catch::Matchers::WithinAbs(0.0, 1e-5));
+  //       // REQUIRE(1 == 0);
+  //   }
+
+  //   TEST_CASE("Rotate Only", "DiffDrive"){
+  //       double track = 1.0;
+  //       double rad = 1.0;
+  //       DiffDrive dd(track, rad);
+  //       REQUIRE(dd.get_current_config().translation().x == 0);
+  //       REQUIRE(dd.get_current_config().translation().y == 0);
+  //       REQUIRE(dd.get_current_config().rotation() == 0);
+  //       REQUIRE(dd.get_wheel_state().l == 0);
+  //       REQUIRE(dd.get_wheel_state().r == 0);
+  //       // define desired twist: Rotate to PI
+  //       Twist2D tw = Twist2D{PI, 0.0, 0.0};
+  //       WheelState ws = dd.inverseKinematics(tw);
+  //       REQUIRE_THAT(ws.l, Catch::Matchers::WithinAbs(-0.5*rad*PI, 1e-5));
+  //       REQUIRE_THAT(ws.r, Catch::Matchers::WithinAbs(0.5*rad*PI, 1e-5));
+  //       dd.forwardKinematics(ws);
+  //       REQUIRE_THAT(dd.get_current_config().translation().x , Catch::Matchers::WithinAbs(0.0, 1e-5));
+  //       REQUIRE_THAT(dd.get_current_config().translation().y, Catch::Matchers::WithinAbs(0.0, 1e-5));
+  //       REQUIRE_THAT(dd.get_current_config().rotation(), Catch::Matchers::WithinAbs(PI, 1e-5));
+  //   }
+
+  //   TEST_CASE("Rotate and Translate", "DiffDrive"){
+  //       double track = 1.0;
+  //       double rad = 1.0;
+  //       DiffDrive dd(track, rad);
+  //       REQUIRE(dd.get_current_config().translation().x == 0);
+  //       REQUIRE(dd.get_current_config().translation().y == 0);
+  //       REQUIRE(dd.get_current_config().rotation() == 0);
+  //       REQUIRE(dd.get_wheel_state().l == 0);
+  //       REQUIRE(dd.get_wheel_state().r == 0);
+  //       // define desired twist: Rotate to PI and move forward 1 unit
+  //       Twist2D tw = Twist2D{PI, 1.0, 0.0};
+  //       WheelState ws = dd.inverseKinematics(tw);
+  //       REQUIRE_THAT(ws.l, Catch::Matchers::WithinAbs(1-0.5*PI, 1e-5));
+  //       REQUIRE_THAT(ws.r, Catch::Matchers::WithinAbs(1+0.5*PI, 1e-5));
+  //       dd.forwardKinematics(WheelState{ws.l,ws.r});
+  //       REQUIRE_THAT(dd.get_current_config().translation().x, Catch::Matchers::WithinAbs(1.0, 1e-5));
+  //       REQUIRE_THAT(dd.get_current_config().translation().y, Catch::Matchers::WithinAbs(0.0, 1e-5));
+  //       REQUIRE_THAT(dd.get_current_config().rotation(), Catch::Matchers::WithinAbs(PI, 1e-5));
+  //   }
+
+  //   TEST_CASE("Test Exeption", "DiffDrive"){
+  //       double track = 1.0;
+  //       double rad = 1.0;
+  //       DiffDrive dd(track, rad);
+  //       // Give it an impossible twist
+  //       Twist2D tw = Twist2D{PI,0.0, 1.0};
+  //       CHECK_THROWS(dd.inverseKinematics(tw));
+  //   }
+
+  //   TEST_CASE("Test a Few Transforms in a Row", "DiffDrive"){
+  //       double track = 1.0;
+  //       double rad = 1.0;
+  //       DiffDrive dd(track, rad);
+  //       REQUIRE(dd.get_current_config().translation().x == 0);
+  //       REQUIRE(dd.get_current_config().translation().y == 0);
+  //       REQUIRE(dd.get_current_config().rotation() == 0);
+  //       REQUIRE(dd.get_wheel_state().l == 0);
+  //       REQUIRE(dd.get_wheel_state().r == 0);
+  //       // define desired twist: first move 1 unit forward in x direction
+  //       Twist2D tw = Twist2D{0, 1.0, 0.0};
+  //       WheelState ws = dd.inverseKinematics(tw);
+  //       dd.forwardKinematics(WheelState{ws.l,ws.r});
+  //       REQUIRE_THAT(dd.get_current_config().translation().x, Catch::Matchers::WithinAbs(1.0, 1e-5));
+  //       REQUIRE_THAT(dd.get_current_config().translation().y, Catch::Matchers::WithinAbs(0.0, 1e-5));
+  //       REQUIRE_THAT(dd.get_current_config().rotation(), Catch::Matchers::WithinAbs(0.0, 1e-5));
+
+  //       // then rotate pi/2
+  //       tw = Twist2D{0.5*PI, 0.0, 0.0};
+  //       ws = dd.inverseKinematics(tw);
+  //       dd.forwardKinematics(WheelState{ws.l,ws.r});
+  //       REQUIRE_THAT(dd.get_current_config().translation().x, Catch::Matchers::WithinAbs(1.0, 1e-5));
+  //       REQUIRE_THAT(dd.get_current_config().translation().y, Catch::Matchers::WithinAbs(0.0, 1e-5));
+  //       REQUIRE_THAT(dd.get_current_config().rotation(), Catch::Matchers::WithinAbs(0.5*PI, 1e-5));
+
+  //       // Drive forward one again. should go to y = 1
+  //       tw = Twist2D{0.0, 1.0, 0.0};
+  //       ws = dd.inverseKinematics(tw);
+  //       dd.forwardKinematics(ws);
+  //       REQUIRE_THAT(dd.get_current_config().translation().x, Catch::Matchers::WithinAbs(1.0, 1e-5));
+  //       REQUIRE_THAT(dd.get_current_config().translation().y, Catch::Matchers::WithinAbs(1.0, 1e-5));
+  //       REQUIRE_THAT(dd.get_current_config().rotation(), Catch::Matchers::WithinAbs(0.5*PI, 1e-5));
+
+      
+  //   }
 }

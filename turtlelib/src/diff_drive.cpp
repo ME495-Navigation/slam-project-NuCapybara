@@ -52,7 +52,7 @@ namespace turtlelib
 
         double newLeft = newWheelState.l;
         double newRight = newWheelState.r;
-        auto dPhi = -wheel_radius/(2*track_width)*newLeft + wheel_radius/(2*track_width)*newRight;
+        auto dPhi = -wheel_radius/(track_width)*newLeft + wheel_radius/(track_width)*newRight;
         auto dx = wheel_radius/2*cos(q.rotation())*newLeft + wheel_radius/2*cos(q.rotation())*newRight;
         auto dy = wheel_radius/2*sin(q.rotation())*newLeft + wheel_radius/2*sin(q.rotation())*newRight;
 
@@ -70,8 +70,8 @@ namespace turtlelib
             const auto tx = twist.x;
             const auto ty = twist.y;
             ///MR Formula 13.34
-            auto newleftWheel = 1/wheel_radius*(- 0.5*track_width*omega + tx);
-            auto newrightWheel = 1/wheel_radius*(0.5*track_width*omega + tx);
+            auto newleftWheel = 1/(2*wheel_radius)*(2*tx - track_width*omega);
+            auto newrightWheel = 1/(2*wheel_radius)*(track_width*omega + 2*tx);
             return WheelState{newleftWheel, newrightWheel};
         }
         else{

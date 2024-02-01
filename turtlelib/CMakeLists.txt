@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 project(turtlelib)
-add_library(turtlelib src/geometry2d.cpp src/se2d.cpp src/svg.cpp)
+add_library(turtlelib src/geometry2d.cpp src/se2d.cpp src/svg.cpp src/diff_drive.cpp)
 
 
 target_include_directories(turtlelib

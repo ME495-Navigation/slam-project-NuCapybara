@@ -38,18 +38,7 @@ namespace turtlelib
         return q;
     }
     void DiffDrive::forwardKinematics(WheelState newWheelState){
-        // Transform2D adjoint_lb = Transform2D{Vector2D{-track_width, 0}, 0};
-        // Transform2D adjoint_rb = Transform2D(Vector2D{track_width, 0}, 0);
-        // double delta_left_phi = newWheelState.l - w.l;///delta phi in radians
-        // double delta_right_phi = newWheelState.r - w.r;
-        // ///conventional wheel vxi = r*phidot, integrate to distance
-        // double distance_left_x = wheel_radius*delta_left_phi;
-        // double distance_right_x = wheel_radius*delta_right_phi;
-
-        // ///calculate the new Twist in wheel left and right frame but still in body frame now
-        // Twist2D twist_left = Twist2D{delta_left_phi, distance_left_x, 0};
-        // Twist2D twist_right = Twist2D{delta_right_phi, distance_right_x, 0};
-
+        //eq 13.15
         double newLeft = newWheelState.l;
         double newRight = newWheelState.r;
         auto dPhi = -wheel_radius/(track_width)*newLeft + wheel_radius/(track_width)*newRight;

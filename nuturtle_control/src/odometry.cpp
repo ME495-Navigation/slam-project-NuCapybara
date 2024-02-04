@@ -32,7 +32,8 @@
 #include "std_msgs/msg/u_int64.hpp"
 #include "std_srvs/srv/empty.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
-#include "nusim/srv/Teleport.srv"
+#include "nusim/srv/Teleport.hpp"
+
 #include "visualization_msgs/msg/marker.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "tf2/LinearMath/Quaternion.h"
@@ -49,6 +50,7 @@
 #include "geometry_msgs/msg/twist_with_covariance.hpp"
 #include "geometry_msgs/msg/quaternion.hpp"
 #include "geometry_msgs/msg/point.hpp"
+#include "nuturtle_control/srv/Initial_pose.hpp"
 
 
 using namespace std::chrono_literals;
@@ -100,6 +102,11 @@ public:
     "joint_states",10, std::bind(&MinimalSubscriber::js_callback, this, _1));
     odom_publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
 
+
+    br = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+    ///
+    initial_pose_=create_service<nuturtle_control::srv::Initial_pose>("initial_pose",
+    std::bind(&Odometry::initial_pose, this, std::placeholders::_1, std::placeholders::_2));
   }
 
 private:
@@ -132,7 +139,7 @@ private:
 
                 const auto dl = left_wheel_angle - last_joint_state.position[left_index];
                 const auto dr = right_wheel_angle - last_joint_state.position[right_index];
-                const auto currTime = js.header.stamp.sec + 1e-9 * js.header.stamp.nanosec;
+                const auto currTime = js.header.stamp.sec 4   + 1e-9 * js.header.stamp.nanosec;
                 const auto lastTime = last_joint_state.header.stamp.sec + 1e-9 * last_joint_state.header.stamp.nanosec;
                 const auto dt = currTime - lastTime;
 
@@ -166,13 +173,39 @@ private:
 
                 ///define odom twist/covariance
                 odom.twist.covariance = [0]; ///do we really need to?
+
+                ///publish odom
+                odom_publisher_->publish(odom);
+
+                ///TF BROADCAST
+                geometry_msgs::TransformStamped transformStamped;
+                
+                transformStamped.header.stamp = js.header.stamp;
+                transformStamped.header.frame_id = odom_id;
+                transformStamped.child_frame_id = body_id;
+                transformStamped.transform.translation.x = robot.get_current_config().translation().x;
+                transformStamped.transform.translation.y = robot.get_current_config().translation().y;
+                transformStamped.transform.rotation.x = q.x();
+                transformStamped.transform.rotation.y = q.y();
+                transformStamped.transform.rotation.z = q.z();
+                transformStamped.transform.rotation.w = q.w();
+                br.sendTransform(transformStamped);
             }
-        }
-        else{
-            RCLCPP_DEBUG_STREAM(node->get_logger(), "Wheel ID not found" << 4);
+       
+            else{
+                RCLCPP_DEBUG_STREAM(node->get_logger(), "Wheel ID not found" << 4);
+            } 
         }
         last_joint_state = js;
 
+    }
+
+    void initial_pose(
+    std::shared_ptr<nuturtle_control::srv::Initial_pose::Request> request,
+    std::shared_ptr<nuturtle_control::srv::Initial_pose::Response> response){
+        turtlelib::Transform2D currConfig(turtlelib::Vector2D{request->x, request->y}, request->theta);
+        robot = turtlelib::DiffDrive(currConfig, wheel_radius, track_width);
+        response->reset = true;
     }
     
     
@@ -182,8 +215,10 @@ private:
     sensor_msgs::msg::JointState last_joint_state;
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_subscription__;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
+    rclcpp::Service<nuturtle_control::srv::InitialPose>::SharedPtr initial_pose_;
     turtlelib::DiffDrive robot;
     nav_msgs::msg::Odometry odom;
+    std::unique_ptr<tf2_ros::TransformBroadcaster> br;
     bool first = true;
 };
 

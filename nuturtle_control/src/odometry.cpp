@@ -50,7 +50,7 @@
 #include "geometry_msgs/msg/twist_with_covariance.hpp"
 #include "geometry_msgs/msg/quaternion.hpp"
 #include "geometry_msgs/msg/point.hpp"
-#include "nuturtle_control/srv/Initial_pose.hpp"
+#include "nuturtle_control/srv/InitialPose.hpp"
 
 
 using namespace std::chrono_literals;
@@ -105,7 +105,7 @@ public:
 
     br = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
     ///
-    initial_pose_=create_service<nuturtle_control::srv::Initial_pose>("initial_pose",
+    initial_pose_=create_service<nuturtle_control::srv::InitialPose>("initial_pose",
     std::bind(&Odometry::initial_pose, this, std::placeholders::_1, std::placeholders::_2));
   }
 
@@ -201,8 +201,8 @@ private:
     }
 
     void initial_pose(
-    std::shared_ptr<nuturtle_control::srv::Initial_pose::Request> request,
-    std::shared_ptr<nuturtle_control::srv::Initial_pose::Response> response){
+    std::shared_ptr<nuturtle_control::srv::InitialPose::Request> request,
+    std::shared_ptr<nuturtle_control::srv::InitialPose::Response> response){
         turtlelib::Transform2D currConfig(turtlelib::Vector2D{request->x, request->y}, request->theta);
         robot = turtlelib::DiffDrive(currConfig, wheel_radius, track_width);
         response->reset = true;

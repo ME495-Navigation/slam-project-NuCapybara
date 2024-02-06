@@ -1,46 +1,90 @@
 cmake_minimum_required(VERSION 3.22)
 project(turtlelib)
-add_library(turtlelib src/geometry2d.cpp src/se2d.cpp src/svg.cpp src/diff_drive.cpp)
 
+# Find your dependencies.
+# Many libraries ship with files that allow CMake to find them
+# Then general behavior is to call "find_package" but the options
+# provided are package specific.  Usually there is then a CMAKE variable
+# That is defined to reference the library
+# here: we find the eigen library as per the instruction
+# https://eigen.tuxfamily.org/dox/TopicCMakeGuide.html
+# find_package(Eigen3 3.3 REQUIRED)
 
+# Create a library.  Can specify if it is shared or static but usually
+# you don't need or want to.
+# name is the name of the library without the extension or lib prefix
+# name creates a cmake "target"
+add_library(turtlelib src/geometry2d.cpp 
+                      src/se2d.cpp 
+                      src/svg.cpp
+                      src/diff_drive.cpp
+                      )
+
+# Use target_include_directories so that #include"mylibrary/header.hpp" works
+# The use of the <BUILD_INTERFACE> and <INSTALL_INTERFACE> is because when
+# Using the library from the build directory or after installation
+# During build, the headers are read from the source code directory
+# When used from the installed location, headers are in the
+# system include/ directory
 target_include_directories(turtlelib
     PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
     $<INSTALL_INTERFACE:include/>)
 
-# enable C++ 17
-target_compile_features(turtlelib PUBLIC cxx_std_17) 
+# specify additional compilation flags for the library
+# Public causes the flags to propagate to anything
+# that links against this library
+target_compile_options(turtlelib PUBLIC -Wall -Wextra -pedantic)
 
-# warnings are your friend!
-target_compile_options(turtlelib PUBLIC -Wall -Wextra -Wpedantic)
+# Enable c++17 support.
+# Public causes the features to propagate to anything
+# that links against this library
+target_compile_features(turtlelib PUBLIC cxx_std_17)
 
+# Create an executable from the following source code files
+# The Name of the executable creates a cmake "target"
+
+#TODO: uncomment the following line and replace Name with the name of your executable
+add_executable(frame_main src/frame_main.cpp)
+target_link_libraries(frame_main turtlelib)
+
+# Use target_link_libraries to add dependencies to a "target"
+# (e.g., a library or executable)
+# This will automatically add all required library files
+# that need to be linked
+# and paths to th locations of header files
+# target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
+
+# install the include files by copying the whole include directory
 install(DIRECTORY include/turtlelib DESTINATION include)
 
-find_package(Catch2 3 REQUIRED)
+# Create a CMake Exported Target containing the lib and exe.
+# Also create CMake Export called projet_name-targets
+# The CMake Export contains files that allow other CMake projects
+# to find this project. It must be installed separately.
+install(TARGETS ${PROJECT_NAME} EXPORT turtlelib-targets)
 
-include(CTest)
-add_executable(turtlelib_test tests/test_geometry2d.cpp)
-target_link_libraries(turtlelib_test turtlelib Catch2::Catch2WithMain)
-add_test(NAME Test_of_Turtlelib COMMAND turtlelib_test)
+# The project_name-targets created by install(TARGETS) needs to be installed.
+# install(EXPORT ...) will generate a file called project_name-config.cmake
+# that contains the exported targets.
+# After installation this file will then be found when calling
+# find_package(project_name) from another cmake project
+# A user can then target_link_libraries(target project_name::library)
+# to use the libraries installed here
+install(EXPORT turtlelib-targets
+        FILE turtlelib-config.cmake
+        NAMESPACE turtlelib::
+        DESTINATION lib/cmake/${PROJECT_NAME})
 
-add_executable(se2d_test tests/test_se2d.cpp)
-target_link_libraries(se2d_test turtlelib Catch2::Catch2WithMain)
-add_test(NAME Test_of_se2d COMMAND se2d_test)
 
-add_executable(svg_test tests/test_svg.cpp)
-target_link_libraries(svg_test turtlelib Catch2::Catch2WithMain)
-add_test(NAME Test_of_svg COMMAND svg_test)
-
-add_executable(frame_main src/frame_main.cpp)
-target_link_libraries(frame_main turtlelib Catch2::Catch2WithMain)
-add_test(NAME frame_main COMMAND frame_main_test)
-
+# # first we can indicate the documentation build as an option and set it to ON by default
+# option(BUILD_DOC "Build documentation" ON)
 
 find_package(Doxygen)
 
 # Building documentation should be optional.
 # To build documentation pass -DBUILD_DOCS=ON when generating the build system
-option(BUILD_DOCS "Build the documentation" OFF)
+option(BUILD_DOCS "Build the documentation" ON)
 
 # build just because Doxygen is missing
 if(${DOXYGEN_FOUND} AND ${BUILD_DOCS})
@@ -54,3 +98,24 @@ if(${DOXYGEN_FOUND} AND ${BUILD_DOCS})
     # The main page is build/html/index.html
 endif()
 
+
+include(CTest)
+
+# CTest sets BUILD_TESTING to on. To disable tests add -DBUILD_TESTING=OFF when invoking cmake
+if(BUILD_TESTING)
+    # Find the Unit testing framework. In this example, Catch2
+    find_package(Catch2 3 REQUIRED)
+
+    # A test is just an executable that is linked against the unit testing library
+    add_executable(my_test_exe tests/test_geometry2d.cpp 
+                               tests/test_se2d.cpp 
+                               tests/test_svg.cpp)
+    target_link_libraries(my_test_exe Catch2::Catch2WithMain turtlelib)
+    target_include_directories(my_test_exe
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
+    $<INSTALL_INTERFACE:include/>)
+
+    # register the test with CTest, telling it what executable to run
+    add_test(NAME the_test_name COMMAND my_test_exe)
+endif()

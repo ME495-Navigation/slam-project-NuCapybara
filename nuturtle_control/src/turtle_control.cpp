@@ -32,18 +32,10 @@
 #include "std_msgs/msg/u_int64.hpp"
 #include "std_srvs/srv/empty.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
-#include "nusim/srv/Teleport.srv"
-#include "visualization_msgs/msg/marker.hpp"
-#include "visualization_msgs/msg/marker_array.hpp"
-#include "tf2/LinearMath/Quaternion.h"
-#include "tf2_ros/transform_broadcaster.h"
-#include "nuturtlebot_msgs/msg/WheelCommands.hpp"
+#include "nuturtlebot_msgs/msg/wheel_commands.hpp"
 #include "geometry_msgs/msg/twist.hpp"
-#include "turtlelib/src/se2d.hpp"
-#include "turtlelib/src/diff_drive.hpp"
-#include "turtlelib/src/geometry2d.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
-#include "nuturtlebot_msgs/msg/SensorData.hpp"
+#include "nuturtlebot_msgs/msg/sensor_data.hpp"
 
 using namespace std::chrono_literals;
 using namespace turtlelib;
@@ -51,7 +43,7 @@ using namespace turtlelib;
 /* This example creates a subclass of Node and uses std::bind() to register a
 * member function as a callback from the timer. */
 
-class turtle_control : public rclcpp::Node
+class Turtle_control : public rclcpp::Node
 {
 public:
   Nusim()
@@ -117,7 +109,7 @@ private:
     {   Twist2D twist;
         twist.omega = msg.angular.z;
         twist.x = msg.linear.x;
-        twist.y = msg.linear.y;
+
         ///transfer radians to motor cmd using motor_cmd_per_rad_sec
         double left_velocity = robot.inverseKinematics(twist).l / motor_cmd_per_rad_sec;
         double right_velocity = robot.inverseKinematics(twist).r / motor_cmd_per_rad_sec;
@@ -135,29 +127,28 @@ private:
         }
         wheel_cmd_publisher_->publish(WheelCommands{left_velocity, right_velocity});
 
-        RCLCPP_INFO(this->get_logger(), "I heard cmd vel as (x, w): '%f %f'", msg->linear.x, msg->angular.z);
+        RCLCPP_INFO(this->get_logger(), "I heard cmd vel as (x, w): '%d %d'", msg->linear.x, msg->angular.z);
     }
 
     void sensor_callback(const nuturtlebot_msgs::msg::SensorData & msg) const
     {
         ///NEED IMPLEMENTATION
-        RCLCPP_INFO(this->get_logger(), "I heard sensor data as (left, right): '%f %f'", msg->left_encoder, msg->right_encoder);
+        RCLCPP_INFO(this->get_logger(), "I heard sensor data as (left, right): '%d %d'", msg.left_encoder, msg.right_encoder);
         double left_encoder = msg.left_encoder;
         double right_encoder = msg.right_encoder;
-        double left_rad = left_encoder / encoder_ticks_per_rad;
-        double right_rad = right_encoder / encoder_ticks_per_rad;
-       
-        joint_state.header.stamp =  sensor_data.stamp; //why not useing the time rn
-        std::vector<double> position = {left_rad, right_rad}; 
-        joint_state.position = position;
+        std::vector<double> joint_pose_vec(2);
+        joint_pose_vec.at(0) = static_cast<double> (left_encoder / encoder_ticks_per_rad);
+        joint_pose_vec.at(1) = static_cast<double> (right_encoder / encoder_ticks_per_rad);
+
+        joint_state.position = joint_pose_vec;
+        joint_state.header.stamp =  msg.stamp; //why not useing the time rn
 
         if(initial_js){
             initial_js = false;
         }
         else{
-            const auto currTime = joint_state.header.stamp.sec + joint_state.header.stamp.nanosec * 1e-9;
-            const auto lastTime = last_jointstate.header.stamp.sec + last_jointstate.header.stamp.nanosec * 1e-9;
-            const auto delta_time = currTime - lastTime;
+            const auto currTime = joint_state.header.stamp.sec + joint_state/home/jialuyu/ME495_Slam/src/slam-project-NuCapybara/nuturtle_control/src/turtle_control.cpp:143:36: error: assignment of read-only location ‘((const Turtle_control*)this)->Turtle_control::joint_state.sensor_msgs::msg::JointState_<std::allocator<void> >::position.std::vector<double, std::allocator<double> >::at(0)’
+
             joint_state.velocity = {(joint_state.position[0]- last_jointstate.position[0])/delta_time, (joint_state.position[1] - last_jointstate.position[1])/delta_time};
         }
         joint_state_publisher_->publish(joint_state);
@@ -183,7 +174,7 @@ private:
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<turtle_control>());
+  rclcpp::spin(std::make_shared<Turtle_control>());
   rclcpp::shutdown();
   return 0;
 }

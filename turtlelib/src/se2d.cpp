@@ -13,7 +13,7 @@ std::ostream & operator<<(std::ostream & os, const Twist2D & tw)
 
 std::istream & operator>>(std::istream & is, Twist2D & tw)
 {
-  char ch;
+    char ch; //uniit
   ch = is.peek();
   if (ch != '[') {
     is >> tw.omega;
@@ -59,19 +59,19 @@ Point2D Transform2D::operator()(Point2D p) const
   Point2D newPt;
   newPt.x = p.x * cos(angular) - sin(angular) * p.y + linear.x;
   newPt.y = p.x * sin(angular) + cos(angular) * p.y + linear.y;
-  return newPt;
+  return newPt; // can return {p.x * cos .., ...}
 }
 
 Vector2D Transform2D::operator()(Vector2D v) const
 {
   const auto new_x = v.x * cos(angular) - sin(angular) * v.y;     //for vector there is no translation
   const auto new_y = v.x * sin(angular) + cos(angular) * v.y;
-  return Vector2D{new_x, new_y};
+  return Vector2D{new_x, new_y}; // good use of const auto, can just return {new_x, new_y}
 }
 
 Twist2D Transform2D::operator()(Twist2D v) const
 {
-  Twist2D newTwist;
+    Twist2D newTwist; // no need for this temporar
   newTwist.x = v.omega * linear.y + v.x * cos(angular) - v.y * sin(angular);
   newTwist.y = v.omega * (-linear.x) + v.x * sin(angular) + v.y * cos(angular);
   newTwist.omega = v.omega;
@@ -83,9 +83,9 @@ Transform2D Transform2D::inv() const
   Transform2D newTrans;
   newTrans.linear.x = -linear.x * cos(angular) - linear.y * sin(angular);
   newTrans.linear.y = -linear.y * cos(angular) + linear.x * sin(angular);
-  auto oldAngular = angular;
+  auto oldAngular = angular; // const
   newTrans.angular = -oldAngular;
-  return newTrans;
+  return newTrans; // return {}
 }
 
 Transform2D & Transform2D::operator*=(const Transform2D & rhs)

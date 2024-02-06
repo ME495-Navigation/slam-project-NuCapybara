@@ -40,7 +40,7 @@
 
 
 using namespace std::chrono_literals;
-
+// remove example comments
 /* This example creates a subclass of Node and uses std::bind() to register a
 * member function as a callback from the timer. */
 
@@ -51,7 +51,7 @@ public:
   : Node("nusim"), timestep_(0)
   {
     ///create a timer
-    this->declare_parameter("rate", 200.);
+      this->declare_parameter("rate", 200.); // no need for this->
     rate_hz = get_parameter("rate").as_double();
     std::chrono::milliseconds rate = (std::chrono::milliseconds) ((int)(1000. / rate_hz));
 
@@ -217,7 +217,7 @@ private:
     arr.markers.at(3).scale.x = arena_x_length + 2 * wall_thickness;
     arr.markers.at(3).scale.y = wall_thickness;
     arr.markers.at(3).pose.position.y = -0.5 * (arena_y_length + wall_thickness);
-
+    // no commented out code in final version
     // arr.markers.at(0).scale.x = arena_x_length;
     // arr.markers.at(0).scale.y = wall_thickness;
     // arr.markers.at(0).pose.position.x = 0;

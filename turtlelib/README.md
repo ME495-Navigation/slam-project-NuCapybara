@@ -54,6 +54,7 @@ A library for handling transformations in SE(2) and other turtlebot-related math
     Class: The default access in a class is private.And class also provides users to "public", "private", "protected".  And user are able to implement more complex data structures in Class.
 
     Struct: The default access in a struct is public. User can implement simpler and passive data structure.
+    [ there is no difference, other than struct is default and class public. anything that can be implemented in a class can also be in a struct]
 
 3. Why is Vector2D a struct and Transform2D a Class (refer to at least 2 specific C++ core guidelines in your answer)?
     C2: : Use class if the class has an invariant; use struct if the data members can vary independently.

@@ -26,7 +26,7 @@ std::istream & operator>>(std::istream & is, Point2D & p)
     is >> p.x;
     // is >> trash;
     is >> p.y;
-  }
+  }// did not consume the closing ]
 
   return is;
 }
@@ -34,7 +34,7 @@ std::istream & operator>>(std::istream & is, Point2D & p)
 double normalize_angle(double rad)
 {
   while (rad <= -PI) {
-    rad += 2 * PI;
+      rad += 2 * PI; // 2.0
   }
   while (rad > PI) {
     rad -= 2 * PI;
@@ -48,7 +48,7 @@ Vector2D operator-(const Point2D & head, const Point2D & tail)
   Vector2D v;
   v.x = head.x - tail.x;
   v.y = head.y - tail.y;
-  return v;
+  return v; // return {head.x - tail.x, head.y - tail.y}
 }
 
 Point2D operator+(const Point2D & tail, const Vector2D & disp)
@@ -56,7 +56,7 @@ Point2D operator+(const Point2D & tail, const Vector2D & disp)
   Point2D pt;
   pt.x = tail.x + disp.x;
   pt.y = tail.y + disp.y;
-  return pt;
+  return pt; // return {tail.x + disp.x, tail.y + disp.y}
 }
 
 std::ostream & operator<<(std::ostream & os, const Vector2D & v)
@@ -74,7 +74,7 @@ std::istream & operator>>(std::istream & is, Vector2D & v)
   //Sceanario: the first char is [
   if (input == '[') {
     is.get();         //consume [
-    double x;
+    double x; // unitiailized
     double y;
     is >> x;
     is.get();         //consumes the whitespace between x and y
@@ -87,7 +87,7 @@ std::istream & operator>>(std::istream & is, Vector2D & v)
       is.setstate(std::ios::failbit);
     }
   } else {
-    double x;
+      double x; // uninitialized
     double y;
     is >> x;
     is >> y;

@@ -9,6 +9,7 @@
 
 namespace turtlelib
 {
+    // this design does not use a class so it is requiring a user to keep track of the stream
     /// \brief generate the svg tag for view box
     /// \param width - the width of viewbox
     /// \param os - the os stream

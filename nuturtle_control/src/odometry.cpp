@@ -139,7 +139,7 @@ private:
 
                 const auto dl = left_wheel_angle - last_joint_state.position[left_index];
                 const auto dr = right_wheel_angle - last_joint_state.position[right_index];
-                const auto currTime = js.header.stamp.sec 4   + 1e-9 * js.header.stamp.nanosec;
+                const auto currTime = js.header.stamp.sec  + 1e-9 * js.header.stamp.nanosec;
                 const auto lastTime = last_joint_state.header.stamp.sec + 1e-9 * last_joint_state.header.stamp.nanosec;
                 const auto dt = currTime - lastTime;
 

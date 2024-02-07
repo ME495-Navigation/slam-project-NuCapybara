@@ -41,9 +41,6 @@
 
 using namespace std::chrono_literals;
 
-/* This example creates a subclass of Node and uses std::bind() to register a
-* member function as a callback from the timer. */
-
 class Nusim : public rclcpp::Node
 {
 public:
@@ -51,7 +48,7 @@ public:
   : Node("nusim"), timestep_(0)
   {
     ///create a timer
-    this->declare_parameter("rate", 200.);
+    declare_parameter("rate", 200.);
     rate_hz = get_parameter("rate").as_double();
     std::chrono::milliseconds rate = (std::chrono::milliseconds) ((int)(1000. / rate_hz));
 
@@ -217,27 +214,6 @@ private:
     arr.markers.at(3).scale.x = arena_x_length + 2 * wall_thickness;
     arr.markers.at(3).scale.y = wall_thickness;
     arr.markers.at(3).pose.position.y = -0.5 * (arena_y_length + wall_thickness);
-
-    // arr.markers.at(0).scale.x = arena_x_length;
-    // arr.markers.at(0).scale.y = wall_thickness;
-    // arr.markers.at(0).pose.position.x = 0;
-    // arr.markers.at(0).pose.position.y = -0.5 * (arena_y_length + wall_thickness);
-
-    // arr.markers.at(1).scale.x = arena_x_length;
-    // arr.markers.at(1).scale.y = wall_thickness;
-    // arr.markers.at(1).pose.position.x = 0;
-    // arr.markers.at(1).pose.position.y = 0.5 * (arena_y_length + wall_thickness);
-
-
-    // arr.markers.at(2).scale.x = wall_thickness;
-    // arr.markers.at(2).scale.y = arena_y_length;
-    // arr.markers.at(2).pose.position.x = 0.5 * (arena_x_length + wall_thickness);
-    // arr.markers.at(2).pose.position.y = 0;
-
-    // arr.markers.at(3).scale.x = wall_thickness;
-    // arr.markers.at(3).scale.y = arena_y_length;
-    // arr.markers.at(3).pose.position.x = -0.5 * (arena_x_length + wall_thickness);
-    // arr.markers.at(3).pose.position.y = 0;
 
     wall_pub->publish(arr);
   }

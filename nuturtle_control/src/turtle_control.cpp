@@ -36,83 +36,89 @@
 #include "geometry_msgs/msg/twist.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "nuturtlebot_msgs/msg/sensor_data.hpp"
+#include "turtlelib/se2d.hpp"
+#include "turtlelib/diff_drive.hpp"
+#include "turtlelib/geometry2d.hpp"
 
 using namespace std::chrono_literals;
-using namespace turtlelib;
 
 /* This example creates a subclass of Node and uses std::bind() to register a
 * member function as a callback from the timer. */
 
-class Turtle_control : public rclcpp::Node
+class TurtleControl : public rclcpp::Node
 {
 public:
-  Nusim()
-  : Node("turtle_control"), timestep_(0)
+  TurtleControl()
+  : Node("turtle_control")
   {
     ///parameter delcaration
-    declare_parameter("wheel_radius", 0.);
+    declare_parameter("wheel_radius", -1.);
     wheel_radius = get_parameter("wheel_radius").as_double();
     if(wheel_radius == 0 || wheel_radius < 0){
-        RCLCPP_DEBUG_STREAM(node->get_logger(), "Wheel_radius error" << 4);
+        RCLCPP_DEBUG_STREAM(get_logger(), "Wheel_radius error" << 4);
     }
 
-    declare_parameter("track_width", 0.);
+    declare_parameter("track_width", -1.);
     track_width = get_parameter("track_width").as_double();
     if(track_width == 0 || track_width < 0){
-        RCLCPP_DEBUG_STREAM(node->get_logger(), "Track_width error" << 4);
+        RCLCPP_DEBUG_STREAM(get_logger(), "Track_width error" << 4);
     }
 
-    declare_parameter("motor_cmd_max", 0.);
-    motor_cmd_max = get_parameter("motor_cmd_max").as_double();
+    this->declare_parameter("motor_cmd_max", -1.);
+    motor_cmd_max = this->get_parameter("motor_cmd_max").as_double();
     if(motor_cmd_max == 0 || motor_cmd_max < 0){
-        RCLCPP_DEBUG_STREAM(node->get_logger(), "Motor_cmd_max error" << 4);
+        RCLCPP_DEBUG_STREAM(get_logger(), "Motor_cmd_max error" << 4);
     }
 
-    declare_parameter("motor_cmd_per_rad_sec", 0.);
+    declare_parameter("motor_cmd_per_rad_sec", -1.);
     motor_cmd_per_rad_sec = get_parameter("motor_cmd_per_rad_sec").as_double();
     if(motor_cmd_per_rad_sec == 0 || motor_cmd_per_rad_sec < 0){
-        RCLCPP_DEBUG_STREAM(node->get_logger(), "Motor_cmd_per_rad_sec error" << 4);
+        RCLCPP_DEBUG_STREAM(get_logger(), "Motor_cmd_per_rad_sec error" << 4);
     }
 
-    declare_parameter("encoder_ticks_per_rad", 0.);
+    declare_parameter("encoder_ticks_per_rad", -1.);
     encoder_ticks_per_rad = get_parameter("encoder_ticks_per_rad").as_double();
     if(encoder_ticks_per_rad == 0 || encoder_ticks_per_rad < 0){
-        RCLCPP_DEBUG_STREAM(node->get_logger(), "Encoder_ticks_per_rad error" << 4);
+        RCLCPP_DEBUG_STREAM(get_logger(), "Encoder_ticks_per_rad error" << 4);
     }
 
-    declare_parameter("collision_radius", 0.);
+    declare_parameter("collision_radius", -1.);
     collision_radius = get_parameter("collision_radius").as_double();
     if(collision_radius == 0 || collision_radius < 0){
-        RCLCPP_DEBUG_STREAM(node->get_logger(), "Collision_radius error" << 4);
+        RCLCPP_DEBUG_STREAM(get_logger(), "Collision_radius error" << 4);
     }
 
     ///Cmd subscription and publisher
-    cmd_subscription_ = this->create_subscription<geometry_msgs::msg::Twist>(
-    "cmd_vel", 10, std::bind(&MinimalSubscriber::cmd_vel_callback, this, _1));
-    wheel_cmd_publisher_ = this->create_publisher<nuturtlebot_msgs::msg::WheelCommands>("wheel_cmd", 10);
+    cmd_subscription_ = create_subscription<geometry_msgs::msg::Twist>(
+    "cmd_vel", 10, std::bind(&TurtleControl::cmd_vel_callback, this, std::placeholders::_1));
+    wheel_cmd_publisher_ = create_publisher<nuturtlebot_msgs::msg::WheelCommands>("wheel_cmd", 10);
 
     ///subscribe to the sensor data
-    sensor_data_subscription_ = this->create_subscription<nuturtlebot_msgs::msg::SensorData>(
-        "sensor_data",10, std::bind(&MinimalSubscriber::sensor_callback, this, _1));
+    sensor_data_subscription_ = create_subscription<nuturtlebot_msgs::msg::SensorData>(
+        "sensor_data",10, std::bind(&TurtleControl::sensor_callback, this, std::placeholders::_1));
 
     ///provide the angle (in radians) and velocity (in rad/sec) of each wheel
-    joint_state_publisher_ = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
+    joint_state_publisher_ = create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
 
-
-    turtlelib::DiffDrive yaml_robot(track_width, wheel_radius);
-    robot = yaml_robot;
+    auto temp = turtlelib::DiffDrive(track_width, wheel_radius);
+    RCLCPP_INFO_STREAM(this->get_logger(), "track width and radius "<< track_width << " "<< wheel_radius);
+    robot = temp;
   }
 
 private:
 
-    void cmd_vel_callback(const geometry::msg::Twist & msg) const
-    {   Twist2D twist;
-        twist.omega = msg.angular.z;
-        twist.x = msg.linear.x;
+    void cmd_vel_callback(const geometry_msgs::msg::Twist & msg) 
+    {   turtlelib::Twist2D twist{msg.angular.z, msg.linear.x, 0.0};
+        //omega, x, y
+        // twist.omega = msg.angular.z;
+        // twist.x = msg.linear.x;
 
         ///transfer radians to motor cmd using motor_cmd_per_rad_sec
-        double left_velocity = robot.inverseKinematics(twist).l / motor_cmd_per_rad_sec;
-        double right_velocity = robot.inverseKinematics(twist).r / motor_cmd_per_rad_sec;
+        turtlelib::WheelState ws = robot.inverseKinematics(twist);
+        RCLCPP_INFO_STREAM(this->get_logger(), "WheelState as "<< ws.l << " "<< ws.r);
+        // ws = {robot.inverseKinematics(twist).l, robot.inverseKinematics(twist).r};
+        double left_velocity = ws.l / motor_cmd_per_rad_sec;
+        double right_velocity = ws.r / motor_cmd_per_rad_sec;
         if(left_velocity > motor_cmd_max){
             left_velocity = motor_cmd_max;
         }
@@ -125,13 +131,17 @@ private:
         else if(right_velocity < -motor_cmd_max){
             right_velocity = -motor_cmd_max;
         }
-        wheel_cmd_publisher_->publish(WheelCommands{left_velocity, right_velocity});
+        nuturtlebot_msgs::msg::WheelCommands wheel_cmd;
+        wheel_cmd.left_velocity = left_velocity;
+        wheel_cmd.right_velocity = right_velocity;
+        wheel_cmd_publisher_->publish(wheel_cmd);
 
-        RCLCPP_INFO(this->get_logger(), "I heard cmd vel as (x, w): '%d %d'", msg->linear.x, msg->angular.z);
+        RCLCPP_INFO_STREAM(this->get_logger(), "I heard cmd vel as (x, w): "<< msg.linear.x << " "<< msg.angular.z);
+        RCLCPP_INFO_STREAM(this->get_logger(), "control node publish wheel cmd as "<< left_velocity << " "<< right_velocity);
     }
 
-    void sensor_callback(const nuturtlebot_msgs::msg::SensorData & msg) const
-    {
+    void sensor_callback(const nuturtlebot_msgs::msg::SensorData & msg) 
+        {
         ///NEED IMPLEMENTATION
         RCLCPP_INFO(this->get_logger(), "I heard sensor data as (left, right): '%d %d'", msg.left_encoder, msg.right_encoder);
         double left_encoder = msg.left_encoder;
@@ -147,7 +157,9 @@ private:
             initial_js = false;
         }
         else{
-            const auto currTime = joint_state.header.stamp.sec + joint_state/home/jialuyu/ME495_Slam/src/slam-project-NuCapybara/nuturtle_control/src/turtle_control.cpp:143:36: error: assignment of read-only location ‘((const Turtle_control*)this)->Turtle_control::joint_state.sensor_msgs::msg::JointState_<std::allocator<void> >::position.std::vector<double, std::allocator<double> >::at(0)’
+            const auto currTime = joint_state.header.stamp.sec + joint_state.header.stamp.nanosec * 1e-9;
+            const auto lastTime = last_jointstate.header.stamp.sec + last_jointstate.header.stamp.nanosec * 1e-9;
+            const auto delta_time = currTime - lastTime;
 
             joint_state.velocity = {(joint_state.position[0]- last_jointstate.position[0])/delta_time, (joint_state.position[1] - last_jointstate.position[1])/delta_time};
         }
@@ -158,11 +170,11 @@ private:
     
     
     
-    Twist2D twist;
+    turtlelib::Twist2D twist;
     bool initial_js = true;
     sensor_msgs::msg::JointState joint_state, last_jointstate;
     double wheel_radius, track_width, motor_cmd_max, motor_cmd_per_rad_sec, encoder_ticks_per_rad, collision_radius;
-    turtlelib::DiffDrive robot{0.0, 0.0};
+    turtlelib::DiffDrive robot= turtlelib::DiffDrive(0.0, 0.0);
     rclcpp::Publisher<nuturtlebot_msgs::msg::WheelCommands>::SharedPtr wheel_cmd_publisher_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_subscription_;
     rclcpp::Subscription<nuturtlebot_msgs::msg::SensorData>::SharedPtr sensor_data_subscription_;
@@ -174,7 +186,7 @@ private:
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<Turtle_control>());
+  rclcpp::spin(std::make_shared<TurtleControl>());
   rclcpp::shutdown();
   return 0;
 }

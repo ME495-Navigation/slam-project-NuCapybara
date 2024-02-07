@@ -48,7 +48,7 @@ find_package(rosidl_default_generators REQUIRED)
 add_executable(turtle_control_node
   src/turtle_control.cpp)
 
-ament_target_dependencies(turtle_control_node rclcpp std_srvs geometry_msgs turtlelib nuturtlebot_msgs sensor_msgs)
+ament_target_dependencies(turtle_control_node rclcpp std_srvs geometry_msgs turtlelib nuturtle_description nuturtlebot_msgs sensor_msgs)
 
 target_link_libraries(turtle_control_node turtlelib::turtlelib ${cpp_typesupport_target})
 
@@ -76,10 +76,11 @@ if(BUILD_TESTING)
   # The link libraries call links this node with catch_ros2::catch_ros2_with_node_main
   # to get the default integration test node main function
   target_link_libraries(turtle_control_test_node
-    catch_ros2::catch_ros2_with_node_main
+    catch_ros2::catch_ros2_with_node_main turtlelib::turtlelib ${cpp_typesupport_target}
   )
   ament_target_dependencies(turtle_control_test_node
     rclcpp std_srvs geometry_msgs turtlelib nuturtlebot_msgs sensor_msgs)
+  
   install(TARGETS
     turtle_control_test_node
     DESTINATION lib/${PROJECT_NAME}

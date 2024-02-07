@@ -9,13 +9,14 @@ namespace turtlelib
 {   
 
     DiffDrive::DiffDrive(double wheel_radius, double track_width):
-        w{WheelState{0,0}},
+        w{WheelState{0.0, 0.0}},
         q{Transform2D()},
         wheel_radius{wheel_radius},
         track_width{track_width}
     {}
 
     DiffDrive::DiffDrive(Transform2D config, double wheel_radius, double track_width):
+        w{WheelState{0.0, 0.0}},
         q{config},
         wheel_radius{wheel_radius},
         track_width{track_width}
@@ -57,7 +58,6 @@ namespace turtlelib
         if(almost_equal(twist.y, 0)){
             const auto omega = twist.omega;
             const auto tx = twist.x;
-            const auto ty = twist.y;
             ///MR Formula 13.34
             auto newleftWheel = 1/(2*wheel_radius)*(2*tx - track_width*omega);
             auto newrightWheel = 1/(2*wheel_radius)*(track_width*omega + 2*tx);

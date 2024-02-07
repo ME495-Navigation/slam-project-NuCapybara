@@ -21,49 +21,77 @@
 #include "std_srvs/srv/empty.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include <chrono>
-#include <functional>
-#include <memory>
-#include <string>
 #include <cmath>
-
-#include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/u_int64.hpp"
-
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "nuturtlebot_msgs/msg/wheel_commands.hpp"
-#include "turtlelib/se2d.hpp"
-#include "turtlelib/src/diff_drive.hpp"
-#include "turtlelib/src/geometry2d.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
-#include "nuturtlebot_msgs/msg/SensorData.hpp"
-#include "turtlelib/include/turtlelib/se2d.hpp"
-#include "turtlelib/include/turtlelib/diff_drive.hpp"
-#include "turtlelib/include/turtlelib/geometry2d.hpp"
+#include "nuturtlebot_msgs/msg/sensor_data.hpp"
+#include "turtlelib/se2d.hpp"
+#include "turtlelib/diff_drive.hpp"
+#include "turtlelib/geometry2d.hpp"
+
 
 using namespace std::chrono_literals;
-using namespace turtlelib;
-using namespace std::chrono_literals;
 
-auto node = rclcpp::Node::make_shared("turtle_control_test");
-auto wheel_cmd_subscriber_ = node->create_subscription<nuturtlebot_msgs::msg::WheelCommands>(
-  "wheel_cmd", 10, std::bind(&MinimalSubscriber::test_cmd_callback, this, _1));
-auto cmd_vel_publisher_ = node->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
-auto robot = turtlelib::DiffDrive robot{0.0, 0.0};
+
+turtlelib::DiffDrive robot{0.033, 0.16};
+geometry_msgs::msg::Twist cmd;
+void test_cmd_callback(const nuturtlebot_msgs::msg::WheelCommands msg) {
+  RCLCPP_INFO_STREAM(rclcpp::get_logger("turtle_control_test"), "I heard Wheel Command as (WC: left velocity, right velocity): " << msg.left_velocity << " " << msg.right_velocity);
+  turtlelib::Twist2D twist{cmd.angular.z, cmd.linear.x, 0.0};
+
+  double left_velocity_calculated = robot.inverseKinematics(twist).l / 0.024;
+  double right_velocity_calculated = robot.inverseKinematics(twist).r / 0.024;
+  RCLCPP_INFO_STREAM(rclcpp::get_logger("turtle_control_test"), "left velocity calculated, right velocity calculated): " << left_velocity_calculated << " " << right_velocity_calculated);
+  REQUIRE(msg.left_velocity == left_velocity_calculated);
+  REQUIRE(msg.right_velocity == right_velocity_calculated);
+}
+
 
 TEST_CASE("cmd_vel test", "turtle_control_test") {
-  geometry_msgs::msg::Twist cmd;
-  cmd.linear.x = 0.1;
-  cmd.angular.z = 0.0;
-  cmd_vel_publisher_->publish(cmd);
-  node->declare_parameter<double>("test_duration");
+  auto node = rclcpp::Node::make_shared("turtle_control_test");
+  /// cmd_vel publisher
+  /// wheel_cmd_subscriber
+  auto cmd_vel_publisher_ = node->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+  auto wheel_cmd_subscriber_ = node->create_subscription<nuturtlebot_msgs::msg::WheelCommands>(
+      "wheel_cmd", 10, test_cmd_callback);
+  
+  // Declare a parameter on the node
+  // (the default catch_ros2 node main will allow ROS arguments
+  // like parameters to be passed to nodes in test files)
+  node->declare_parameter<double>("test_duration", 5.0);
 
-  void test_cmd_callback(const nuturtlebot_msgs::msg::WheelCommands::SharedPtr msg) {
-    double left_velocity_calculated = robot.inverseKinematics(cmd).l / 0.024;
-    double right_velocity_calculated = robot.inverseKinematics(cmd).r / 0.024;
-    REQUIRE(msg->left_velocity == left_velocity_calculated);
-    REQUIRE(msg->right_velocity == right_velocity_calculated);
+  // Get value of the parameter
+  // This line will cause a runtime error if a value
+  // for the "test_duration" parameter is not passed to the node
+  const auto TEST_DURATION =
+    node->get_parameter("test_duration").get_parameter_value().get<double>();
+
+  rclcpp::Time start_time = rclcpp::Clock().now();
+
+  cmd.linear.x = 0.1;
+  cmd.angular.z = 0.1;
+  cmd_vel_publisher_->publish(cmd);
+  RCLCPP_INFO_STREAM(rclcpp::get_logger("turtle_control_test"), "I published cmd_vel");
+
+
+  while (
+    rclcpp::ok() &&
+    ((rclcpp::Clock().now() - start_time) < rclcpp::Duration::from_seconds(TEST_DURATION))
+  )
+  {
+    // Repeatedly check for the dummy service until its found
+    // if (client->wait_for_service(0s)) {
+    //   service_found = true;
+    //   break;
+    // }
+
+    rclcpp::spin_some(node);
   }
 
-  rclcpp::spin(node);
+  // Test assertions - check that the dummy node was found
+  // CHECK(service_found);
+
 }

@@ -132,7 +132,7 @@ private:
             //not first time, gonna pair with last_joint_state
             // If left wheel was found 
             // Reference: https://www.geeksforgeeks.org/how-to-find-index-of-a-given-element-in-a-vector-in-cpp/
-            if (left_wheel_ptr != joint_name_list.end() && right_wheel_ptr != joint_name_list.end())  
+            if ((left_wheel_ptr != joint_name_list.end()) && (right_wheel_ptr != joint_name_list.end()))  
             {   // calculating the index 
                 int left_index = left_wheel_ptr - joint_name_list.begin(); 
                 int right_index = right_wheel_ptr - joint_name_list.begin();
@@ -217,7 +217,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_subscription_;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
     rclcpp::Service<nuturtle_control::srv::InitialPose>::SharedPtr initial_pose_;
-    turtlelib::DiffDrive robot{0.0, 0.0};
+    turtlelib::DiffDrive robot= turtlelib::DiffDrive(0.0, 0.0);
     nav_msgs::msg::Odometry odom;
     std::unique_ptr<tf2_ros::TransformBroadcaster> br;
     bool first = true;

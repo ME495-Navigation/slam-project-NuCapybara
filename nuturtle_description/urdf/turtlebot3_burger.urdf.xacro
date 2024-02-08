@@ -96,7 +96,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="1.57 0 0"/>
       <geometry>
-        <mesh filename="file://$(find nuturtle_description)/left_tire.stl" scale="${wheel_radius} 0.001 ${wheel_radius}"/>
+        <mesh filename="file://$(find nuturtle_description)/left_tire.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>
@@ -104,7 +104,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <cylinder length="0.018" radius="0.033"/>
+        <cylinder length="0.018" radius="${wheel_radius}"/>
       </geometry>
     </collision>
 
@@ -126,7 +126,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="1.57 0 0"/>
       <geometry>
-        <mesh filename="file://$(find nuturtle_description)/right_tire.stl" scale="${wheel_radius} 0.001 ${wheel_radius}"/>
+        <mesh filename="file://$(find nuturtle_description)/right_tire.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="dark"/>
     </visual>
@@ -134,7 +134,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <cylinder length="0.018" radius="0.033"/>
+        <cylinder length="0.018" radius="${wheel_radius}"/>
       </geometry>
     </collision>
 

@@ -145,7 +145,7 @@ private:
     geometry_msgs::msg::Twist command;
     double radius, velocity;
     double track_width, wheel_radius;
-    turtlelib::DiffDrive robot{0.0, 0.0};
+    turtlelib::DiffDrive robot= turtlelib::DiffDrive(0.0, 0.0);
 };
 
 

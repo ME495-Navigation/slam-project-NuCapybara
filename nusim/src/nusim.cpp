@@ -37,6 +37,7 @@
 #include "visualization_msgs/msg/marker_array.hpp"
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2_ros/transform_broadcaster.h"
+#include "nuturtlebot_msgs/msg/wheel_commands.hpp"
 
 
 using namespace std::chrono_literals;
@@ -99,6 +100,9 @@ public:
       create_service<nusim::srv::Teleport>(
       "~/teleport",
       std::bind(&Nusim::teleport, this, std::placeholders::_1, std::placeholders::_2));
+
+    wheel_subscriber_ = create_subscription<nuturtlebot_msgs::msg::WheelCommands>(
+      "red/wheel_cmd", 10, std::bind(&Nusim::wheel_callback, this, std::placeholders::_1));
 
     //wall publisher
     rclcpp::QoS qos_policy = rclcpp::QoS(rclcpp::KeepLast(10)).transient_local();
@@ -252,6 +256,14 @@ private:
     }
     obs_pub->publish(arr_obstacle);
   }
+
+  void wheel_callback(const nuturtlebot_msgs::msg::WheelCommands & wc)
+  {
+    // just store left and right velocity and do this update in the timer
+    left_velocity = wc.left_velocity;   // multiply by timestep*period
+    right_velocity = wc.right_velocity;
+    // RCLCPP_INFO_STREAM(get_logger(), "Receiving "<<wc.left_velocity<<" and "<<wc.right_velocity);
+  }
   double x, y, theta, rate_hz;
   double arena_x_length, arena_y_length;
   std::vector<double> obx, oby;
@@ -260,6 +272,8 @@ private:
   double x0, y0, theta0;
   size_t timestep_;
   size_t cyl_num;
+  int left_velocity = 0;
+  int right_velocity = 0;
 
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<std_msgs::msg::UInt64>::SharedPtr time_step_publisher_;
@@ -268,6 +282,7 @@ private:
   rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset_;
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   rclcpp::Service<nusim::srv::Teleport>::SharedPtr teleport_;
+  rclcpp::Subscription<nuturtlebot_msgs::msg::WheelCommands>::SharedPtr wheel_subscriber_;
 };
 
 

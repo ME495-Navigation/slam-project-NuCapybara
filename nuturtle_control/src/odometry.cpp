@@ -13,8 +13,7 @@
 ///     ~/obstacles (visualization_msgs::msg::MarkerArray): marker objects representing cylinders
 ///     ~/walls (visualization_msgs::msg::MarkerArray): marker objects representing walls of arena
 /// SERVERS:
-///     ~/reset (std_srvs::srv::Empty): resets the simulation to the initial state
-///     ~/teleport (nusim::srv::Teleport): teleports the turtle to a given x, y, theta value
+
 /// CLIENTS:
 ///     none
 /// BROADCASTS:
@@ -30,28 +29,22 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/u_int64.hpp"
-#include "std_srvs/srv/empty.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
-#include "nusim/srv/Teleport.hpp"
-
-#include "visualization_msgs/msg/marker.hpp"
-#include "visualization_msgs/msg/marker_array.hpp"
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2_ros/transform_broadcaster.h"
-#include "nuturtlebot_msgs/msg/WheelCommands.hpp"
+
 #include "geometry_msgs/msg/twist.hpp"
-#include "turtlelib/include/turtlelib/se2d.hpp"
-#include "turtlelib/include/turtlelib/diff_drive.hpp"
-#include "turtlelib/include/turtlelib/geometry2d.hpp"
+#include "turtlelib/se2d.hpp"
+#include "turtlelib/diff_drive.hpp"
+#include "turtlelib/geometry2d.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
-#include "nuturtlebot_msgs/msg/SensorData.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "geometry_msgs/msg/pose_with_covariance.hpp"
 #include "geometry_msgs/msg/twist_with_covariance.hpp"
 #include "geometry_msgs/msg/quaternion.hpp"
 #include "geometry_msgs/msg/point.hpp"
-#include "nuturtle_control/srv/InitialPose.hpp"
-
+#include "nuturtle_control/srv/initial_pose.hpp"
+#include "geometry_msgs/msg/transform_stamped.hpp"
 
 using namespace std::chrono_literals;
 using namespace turtlelib;
@@ -59,22 +52,20 @@ using namespace turtlelib;
 /* This example creates a subclass of Node and uses std::bind() to register a
 * member function as a callback from the timer. */
 
-class odometry: public rclcpp::Node
+class Odometry: public rclcpp::Node
 {
 public:
-  Nusim()
-  : Node("odometry"), timestep_(0)
+  Odometry()
+  : Node("odometry")
   {
-
     turtlelib::DiffDrive temp(track_width, wheel_radius);
     robot = temp;
-
 
     ///parameter delcaration
     declare_parameter("body_id", body_id);
     body_id = get_parameter("body_id").as_string();
     if(body_id.empty()){
-        RCLCPP_DEBUG_STREAM(node->get_logger(), "BodyID not specified" << 4);
+        RCLCPP_DEBUG_STREAM(get_logger(), "BodyID not specified" << 4);
     }
     
     declare_parameter("odom_id", "odom");
@@ -84,13 +75,13 @@ public:
     declare_parameter("wheel_left", body_id);
     wheel_left = get_parameter("wheel_left").as_string();
     if(wheel_left.empty()){
-        RCLCPP_DEBUG_STREAM(node->get_logger(), "left wheel joint name not specified" << 4);
+        RCLCPP_DEBUG_STREAM(get_logger(), "left wheel joint name not specified" << 4);
     }
 
     declare_parameter("wheel_right", body_id);
     wheel_right = get_parameter("wheel_right").as_string();
     if(wheel_right.empty()){
-        RCLCPP_DEBUG_STREAM(node->get_logger(), "right wheel joint name not specified" << 4);
+        RCLCPP_DEBUG_STREAM(get_logger(), "right wheel joint name not specified" << 4);
     }
 
     declare_parameter("wheel_radius", -1.);
@@ -110,8 +101,8 @@ public:
     odom.child_frame_id = body_id;
 
     /// joint state subscriber and odom publisher
-    joint_state_subscription_ = this->create_subscription<sensor_msgs::msg::JointState>(
-    "joint_states",10, std::bind(&MinimalSubscriber::js_callback, this, _1));
+    joint_state_subscription_ = create_subscription<sensor_msgs::msg::JointState>(
+      "joint_states", 10, std::bind(&Odometry::js_callback, this, std::placeholders::_1));
     odom_publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
 
 
@@ -125,7 +116,7 @@ private:
 
     void js_callback(const sensor_msgs::msg::JointState & js){
         ///Frame this joint state is associated with
-        string js_frameid = js.header.frame_id;
+        std::string js_frameid = js.header.frame_id;
         const auto time_stamp = js.header.stamp;
         const auto joint_name_list = js.name;
         const auto joint_position_list = js.position;
@@ -175,23 +166,20 @@ private:
                 odom.pose.pose.orientation.y = q.y();
                 odom.pose.pose.orientation.z = q.z();
                 odom.pose.pose.orientation.w = q.w();
-                ///define odom covariance
-                odom.pose.covariance = [0]; ///do we really need to?
-
+            
                 ///ODOM VELOCITY PART
                 ///define odom twist/twist
                 odom.twist.twist.linear.x = (robot.get_current_config().translation().x - prev_x) / dt;
                 odom.twist.twist.linear.y = (robot.get_current_config().translation().y - prev_y) / dt;
                 odom.twist.twist.angular.z = normalize_angle(robot.get_current_config().rotation() - prev_phi) / dt;
 
-                ///define odom twist/covariance
-                odom.twist.covariance = [0]; ///do we really need to?
+
 
                 ///publish odom
                 odom_publisher_->publish(odom);
 
                 ///TF BROADCAST
-                geometry_msgs::TransformStamped transformStamped;
+                geometry_msgs::msg::TransformStamped transformStamped;
                 
                 transformStamped.header.stamp = js.header.stamp;
                 transformStamped.header.frame_id = odom_id;
@@ -202,11 +190,11 @@ private:
                 transformStamped.transform.rotation.y = q.y();
                 transformStamped.transform.rotation.z = q.z();
                 transformStamped.transform.rotation.w = q.w();
-                br.sendTransform(transformStamped);
+                br->sendTransform(transformStamped);
             }
        
             else{
-                RCLCPP_DEBUG_STREAM(node->get_logger(), "Wheel ID not found" << 4);
+                RCLCPP_DEBUG_STREAM(get_logger(), "Wheel ID not found" << 4);
             } 
         }
         last_joint_state = js;
@@ -218,7 +206,7 @@ private:
     std::shared_ptr<nuturtle_control::srv::InitialPose::Response> response){
         turtlelib::Transform2D currConfig(turtlelib::Vector2D{request->x, request->y}, request->theta);
         robot = turtlelib::DiffDrive(currConfig, wheel_radius, track_width);
-        response->reset = true;
+        response->success = true;
     }
     
     
@@ -226,10 +214,10 @@ private:
     std::string wheel_left, wheel_right, body_id, odom_id;
     double wheel_radius, track_width;
     sensor_msgs::msg::JointState last_joint_state;
-    rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_subscription__;
+    rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_subscription_;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
     rclcpp::Service<nuturtle_control::srv::InitialPose>::SharedPtr initial_pose_;
-    turtlelib::DiffDrive robot;
+    turtlelib::DiffDrive robot{0.0, 0.0};
     nav_msgs::msg::Odometry odom;
     std::unique_ptr<tf2_ros::TransformBroadcaster> br;
     bool first = true;
@@ -239,7 +227,7 @@ private:
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<turtle_control>());
+  rclcpp::spin(std::make_shared<Odometry>());
   rclcpp::shutdown();
   return 0;
 }

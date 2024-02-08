@@ -32,26 +32,17 @@
 #include "std_msgs/msg/u_int64.hpp"
 #include "std_srvs/srv/empty.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
-#include "nusim/srv/Teleport.hpp"
-
-#include "visualization_msgs/msg/marker.hpp"
-#include "visualization_msgs/msg/marker_array.hpp"
-#include "tf2/LinearMath/Quaternion.h"
-#include "tf2_ros/transform_broadcaster.h"
-#include "nuturtlebot_msgs/msg/WheelCommands.hpp"
 #include "geometry_msgs/msg/twist.hpp"
-#include "turtlelib/include/turtlelib/se2d.hpp"
-#include "turtlelib/include/turtlelib/diff_drive.hpp"
-#include "turtlelib/include/turtlelib/geometry2d.hpp"
+#include "turtlelib/se2d.hpp"
+#include "turtlelib/diff_drive.hpp"
+#include "turtlelib/geometry2d.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
-#include "nuturtlebot_msgs/msg/SensorData.hpp"
-#include "nav_msgs/msg/odometry.hpp"
 #include "geometry_msgs/msg/pose_with_covariance.hpp"
 #include "geometry_msgs/msg/twist_with_covariance.hpp"
 #include "geometry_msgs/msg/quaternion.hpp"
 #include "geometry_msgs/msg/point.hpp"
-#include "nuturtle_control/srv/InitialPose.hpp"
-#include "nuturtle_control/srv/Control.hpp"
+#include "nuturtle_control/srv/initial_pose.hpp"
+#include "nuturtle_control/srv/control.hpp"
 #include "std_srvs/srv/empty.hpp"
 
 using namespace std::chrono_literals;
@@ -63,11 +54,11 @@ using namespace turtlelib;
 class Circle: public rclcpp::Node
 {
 public:
-  Nusim()
-  : Node("circle"), timestep_(0)
+  Circle()
+  : Node("circle")
   {
 
-    turtlelib::DiffDrive temp(track_width, wheel_radius);
+    turtlelib::DiffDrive temp(wheel_radius, track_width);
     robot = temp;
 
     ///parameter delcaration
@@ -83,6 +74,17 @@ public:
     radius = get_parameter("radius").as_double();
 
 
+    declare_parameter("wheel_radius", -1.);
+    wheel_radius = get_parameter("wheel_radius").as_double();
+    if(wheel_radius == 0 || wheel_radius < 0){
+        RCLCPP_DEBUG_STREAM(get_logger(), "Wheel_radius error" << 4);
+    }
+
+    declare_parameter("track_width", -1.);
+    track_width = get_parameter("track_width").as_double();
+    if(track_width == 0 || track_width < 0){
+        RCLCPP_DEBUG_STREAM(get_logger(), "Track_width error" << 4);
+    }
 
     control_ = this->create_service<nuturtle_control::srv::Control>("~/control", std::bind(&Circle::control, this, std::placeholders::_1, std::placeholders::_2));
     stop_ =  this->create_service<std_srvs::srv::Empty>("~/stop", std::bind(&Circle::stop, this, std::placeholders::_1, std::placeholders::_2));
@@ -100,33 +102,33 @@ private:
 
 
     void timer_callback(){
-      if(stop == false){
+      if(ifstop == false){
         /// if stop service is not called, then cmd publisher will continue to publish the command
-        cmd_publisher_(command);
-        RCLCPP_INFO_STREAM_ONCE(node->get_logger(), "Publish a command thru timecallback_circle!");
+        cmd_publisher_->publish(command);
+        RCLCPP_INFO_STREAM_ONCE(get_logger(), "Publish a command thru timecallback_circle!");
       }
     }
 
-    void control(const std::shared_ptr<nuturtle_control::srv::Control::Request> request, std::shared_ptr<nuturtle_control::srv::Control::Response> response){
-        stop = false;
-        velocity = request->velocity;
+    void control(std::shared_ptr<nuturtle_control::srv::Control::Request> request, std::shared_ptr<nuturtle_control::srv::Control::Response> response){
+        ifstop = false;
+        velocity = request->angular_velocity;
         radius = request->radius;
         response->success = true;
         command.linear.x = velocity*radius;
         command.angular.z = velocity;
     }
 
-    void reverse(const std::shared_ptr<std_srvs::srv::empty::Request> request, std::shared_ptr<std_srvs::srv::empty::Response> response){
+    void reverse(std::shared_ptr<std_srvs::srv::Empty::Request> request, std::shared_ptr<std_srvs::srv::Empty::Response> response){
         if(velocity !=0 && radius != 0){
-          stop = false;
+          ifstop = false;
           command.linear.x = velocity*radius; /// the linear velocity is changed to the opposite direction based on angular velocity
           command.angular.z = -velocity; /// the angular velocity is changed to the opposite direction
         }
     }
 
     
-    void stop(const std::shared_ptr<std_srvs::srv::empty::Request> request, std::shared_ptr<std_srvs::srv::empty::Response> response){
-        stop = true; ///QUESTIONS
+    void stop(std::shared_ptr<std_srvs::srv::Empty::Request> request, std::shared_ptr<std_srvs::srv::Empty::Response> response){
+        ifstop = true; ///QUESTIONS
         command.linear.x = 0.0;
         command.angular.z = 0.0;
         cmd_publisher_->publish(command);
@@ -134,18 +136,23 @@ private:
     }
     
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Service<nuturtle_control>::SharedPtr control_;
+    rclcpp::Service<nuturtle_control::srv::Control>::SharedPtr control_;
     rclcpp::Service<std_srvs::srv::Empty>::SharedPtr stop_;
-    bool stop = false;
+    rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reverse_;
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_publisher_;
+    bool ifstop = false;
     double rate_hz;
     geometry_msgs::msg::Twist command;
+    double radius, velocity;
+    double track_width, wheel_radius;
+    turtlelib::DiffDrive robot{0.0, 0.0};
 };
 
 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<turtle_control>());
+  rclcpp::spin(std::make_shared<Circle>());
   rclcpp::shutdown();
   return 0;
 }

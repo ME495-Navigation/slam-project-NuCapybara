@@ -88,7 +88,7 @@ if(BUILD_TESTING)
   target_link_libraries(turtle_control_test_node
     catch_ros2::catch_ros2_with_node_main turtlelib::turtlelib ${cpp_typesupport_target}
   )
-  target_link_libraries(turtle_odom_test_node catch_ros2::catch_ros2_with_node_main turtlelib::turtlelib${cpp_typesupport_target})
+  target_link_libraries(turtle_odom_test_node catch_ros2::catch_ros2_with_node_main turtlelib::turtlelib ${cpp_typesupport_target})
   target_link_libraries(turtle_circle_test catch_ros2::catch_ros2_with_node_main turtlelib::turtlelib)
 
   ament_target_dependencies(turtle_control_test_node

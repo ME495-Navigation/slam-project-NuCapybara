@@ -43,12 +43,12 @@
         <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py">
             <arg name="color" value="red" />
             <arg name="use_rviz" value="false" />
-            <arg name="use_jsp" value="false" />
+            <arg name="use_jsp" value="true" />
         </include>
 
         <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py">
             <arg name="color" value="blue" />
-            <arg name="use_rviz" value="false" />
+            <arg name="use_rviz" value="true" />
             <arg name="use_jsp" value="false" />
             <arg name="x" value= '0.0'/>
             <arg name="y" value= '0.6'/>    

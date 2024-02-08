@@ -93,6 +93,18 @@ public:
         RCLCPP_DEBUG_STREAM(node->get_logger(), "right wheel joint name not specified" << 4);
     }
 
+    declare_parameter("wheel_radius", -1.);
+    wheel_radius = get_parameter("wheel_radius").as_double();
+    if(wheel_radius == 0 || wheel_radius < 0){
+        RCLCPP_DEBUG_STREAM(get_logger(), "Wheel_radius error" << 4);
+    }
+
+    declare_parameter("track_width", -1.);
+    track_width = get_parameter("track_width").as_double();
+    if(track_width == 0 || track_width < 0){
+        RCLCPP_DEBUG_STREAM(get_logger(), "Track_width error" << 4);
+    }
+
     //odom id defination
     odom.header.frame_id = odom_id; //relatively world id?
     odom.child_frame_id = body_id;
@@ -128,6 +140,7 @@ private:
         else{
             //not first time, gonna pair with last_joint_state
             // If left wheel was found 
+            // Reference: https://www.geeksforgeeks.org/how-to-find-index-of-a-given-element-in-a-vector-in-cpp/
             if (left_wheel_ptr != joint_name_list.end() && right_wheel_ptr != joint_name_list.end())  
             {   // calculating the index 
                 int left_index = left_wheel_ptr - joint_name_list.begin(); 

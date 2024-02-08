@@ -100,7 +100,7 @@ public:
     ///provide the angle (in radians) and velocity (in rad/sec) of each wheel
     joint_state_publisher_ = create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
 
-    auto temp = turtlelib::DiffDrive(track_width, wheel_radius);
+    auto temp = turtlelib::DiffDrive(wheel_radius, track_width);
     RCLCPP_INFO_STREAM(this->get_logger(), "track width and radius "<< track_width << " "<< wheel_radius);
     robot = temp;
   }
@@ -109,6 +109,7 @@ private:
 
     void cmd_vel_callback(const geometry_msgs::msg::Twist & msg) 
     {   turtlelib::Twist2D twist{msg.angular.z, msg.linear.x, 0.0};
+        RCLCPP_INFO_STREAM(rclcpp::get_logger("turtle_control_test"), "???twist received"<<  msg.angular.z << " " << msg.linear.x);
         //omega, x, y
         // twist.omega = msg.angular.z;
         // twist.x = msg.linear.x;
@@ -116,7 +117,7 @@ private:
         ///transfer radians to motor cmd using motor_cmd_per_rad_sec
         turtlelib::WheelState ws = robot.inverseKinematics(twist);
         RCLCPP_INFO_STREAM(this->get_logger(), "WheelState as "<< ws.l << " "<< ws.r);
-        // ws = {robot.inverseKinematics(twist).l, robot.inverseKinematics(twist).r};
+
         double left_velocity = ws.l / motor_cmd_per_rad_sec;
         double right_velocity = ws.r / motor_cmd_per_rad_sec;
         if(left_velocity > motor_cmd_max){

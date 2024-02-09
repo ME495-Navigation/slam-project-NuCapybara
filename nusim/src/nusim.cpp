@@ -161,6 +161,8 @@ private:
     ///use delta wheel degree to update wheel state
     auto new_wheel_state_delta = turtlelib::WheelState{delta_left_angle, delta_right_angle};
     robot.forwardKinematics(new_wheel_state_delta);
+    x = robot.get_current_config().translation().x;
+    y = robot.get_current_config().translation().y;
     
     //update the sensor call back
     nuturtlebot_msgs::msg::SensorData sensor_data;

@@ -8,6 +8,7 @@ from launch.substitutions import (
 )
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument, SetLaunchConfiguration, GroupAction
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.substitutions import FindPackageShare, ExecutableInPackage
 from launch.events import Shutdown
 
@@ -130,6 +131,9 @@ def generate_launch_description():
                             "--child-frame-id",
                             [LaunchConfiguration("color"), "/base_footprint"],
                         ],
+                        condition=IfCondition(PythonExpression([
+                "('", LaunchConfiguration('color'), "'== 'purple') or ('",
+                LaunchConfiguration('color'), "' == 'green')"])),
                     ),
                 ]
             ),

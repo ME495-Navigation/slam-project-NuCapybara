@@ -31,6 +31,7 @@
             <param name="odom_id" value="odom" />
             <param name="wheel_left" value="wheel_left_joint" />
             <param name="wheel_right" value="wheel_right_joint" />
+            <remap from="joint_states" to="red/wheel_joint_states"/>
         </node>
 
         <!-- launch nusim node -->
@@ -48,10 +49,8 @@
 
         <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py">
             <arg name="color" value="blue" />
-            <arg name="use_rviz" value="true" />
-            <arg name="use_jsp" value="false" />
-            <arg name="x" value= '0.0'/>
-            <arg name="y" value= '0.6'/>    
+            <arg name="use_rviz" value="false" />
+            <arg name="use_jsp" value="true" />
         </include>
     </group>
 

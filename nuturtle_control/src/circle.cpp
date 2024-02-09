@@ -89,7 +89,7 @@ public:
     control_ = this->create_service<nuturtle_control::srv::Control>("~/control", std::bind(&Circle::control, this, std::placeholders::_1, std::placeholders::_2));
     stop_ =  this->create_service<std_srvs::srv::Empty>("~/stop", std::bind(&Circle::stop, this, std::placeholders::_1, std::placeholders::_2));
     reverse_ = this->create_service<std_srvs::srv::Empty>("~/reverse", std::bind(&Circle::reverse, this, std::placeholders::_1, std::placeholders::_2));
-    cmd_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("~/cmd_vel", 10);
+    cmd_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
 
     timer_ = create_wall_timer(
     rate, std::bind(&Circle::timer_callback, this));

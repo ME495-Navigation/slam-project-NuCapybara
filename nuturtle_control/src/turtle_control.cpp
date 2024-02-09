@@ -144,7 +144,7 @@ private:
     void sensor_callback(const nuturtlebot_msgs::msg::SensorData & msg) 
         {
         ///NEED IMPLEMENTATION
-        RCLCPP_INFO(this->get_logger(), "I heard sensor data as (left, right): '%d %d'", msg.left_encoder, msg.right_encoder);
+        // RCLCPP_INFO(this->get_logger(), "I heard sensor data as (left, right): '%d %d'", msg.left_encoder, msg.right_encoder);
         double left_encoder = msg.left_encoder;
         double right_encoder = msg.right_encoder;
         std::vector<double> joint_pose_vec(2);

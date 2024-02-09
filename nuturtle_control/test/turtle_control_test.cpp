@@ -24,7 +24,7 @@ geometry_msgs::msg::Twist cmd;
 /// SensorData message for testing sensor_data_callback
 nuturtlebot_msgs::msg::SensorData sensor_msg;
 void test_cmd_callback(const nuturtlebot_msgs::msg::WheelCommands msg) {
-  RCLCPP_INFO_STREAM(rclcpp::get_logger("turtle_control_test"), "I heard Wheel Command as (WC: left velocity, right velocity): " << msg.left_velocity << " " << msg.right_velocity);
+  // RCLCPP_INFO_STREAM(rclcpp::get_logger("turtle_control_test"), "I heard Wheel Command as (WC: left velocity, right velocity): " << msg.left_velocity << " " << msg.right_velocity);
   turtlelib::Twist2D twist{cmd.angular.z, cmd.linear.x, 0.0};
   turtlelib::WheelState ws = robot.inverseKinematics(twist);
   RCLCPP_INFO_STREAM(rclcpp::get_logger("turtle_control_test"), "!!!wl, wr calcualted "<< ws.l << " " << ws.r);
@@ -39,7 +39,7 @@ void test_cmd_callback(const nuturtlebot_msgs::msg::WheelCommands msg) {
 }
 
 void test_joint_state_callback(const sensor_msgs::msg::JointState msg) {
-  RCLCPP_INFO_STREAM(rclcpp::get_logger("turtle_control_test"), "I heard Joint State as (JS: left position, right position): " << msg.position.at(0) << " " << msg.position.at(1));
+  // RCLCPP_INFO_STREAM(rclcpp::get_logger("turtle_control_test"), "I heard Joint State as (JS: left position, right position): " << msg.position.at(0) << " " << msg.position.at(1));
   double left_wheel_position = msg.position.at(0);
   double right_wheel_position = msg.position.at(1);
   RCLCPP_INFO_STREAM(rclcpp::get_logger("turtle_control_test"), "left position, right position: " << left_wheel_position << " " <<  right_wheel_position);

@@ -64,21 +64,22 @@ public:
     ///parameter delcaration
     declare_parameter("body_id", body_id);
     body_id = get_parameter("body_id").as_string();
+    RCLCPP_INFO_STREAM(get_logger(), "BODY ID: " << body_id);
     if(body_id.empty()){
         RCLCPP_DEBUG_STREAM(get_logger(), "BodyID not specified" << 4);
     }
     
-    declare_parameter("odom_id", "odom");
+    declare_parameter("odom_id", odom_id);
     odom_id = get_parameter("odom_id").as_string();
     RCLCPP_INFO_STREAM(get_logger(), "Odom ID: " << odom_id);
 
-    declare_parameter("wheel_left", body_id);
+    declare_parameter("wheel_left", wheel_left);
     wheel_left = get_parameter("wheel_left").as_string();
     if(wheel_left.empty()){
         RCLCPP_DEBUG_STREAM(get_logger(), "left wheel joint name not specified" << 4);
     }
 
-    declare_parameter("wheel_right", body_id);
+    declare_parameter("wheel_right", wheel_right);
     wheel_right = get_parameter("wheel_right").as_string();
     if(wheel_right.empty()){
         RCLCPP_DEBUG_STREAM(get_logger(), "right wheel joint name not specified" << 4);
@@ -99,6 +100,8 @@ public:
     //odom id defination
     odom.header.frame_id = odom_id; //relatively world id?
     odom.child_frame_id = body_id;
+    transformStamped.header.frame_id = odom_id;
+    transformStamped.child_frame_id = body_id;
 
     /// joint state subscriber and odom publisher
     joint_state_subscription_ = create_subscription<sensor_msgs::msg::JointState>(
@@ -115,6 +118,7 @@ public:
 private:
 
     void js_callback(const sensor_msgs::msg::JointState & js){
+        // RCLCPP_INFO_STREAM(get_logger(), "!!!!!!!!!?????? JS CALLBACK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
         ///Frame this joint state is associated with
         std::string js_frameid = js.header.frame_id;
         const auto time_stamp = js.header.stamp;
@@ -122,18 +126,21 @@ private:
         const auto joint_position_list = js.position;
         const auto joint_velocity_list = js.velocity;
 
-        auto left_wheel_ptr = find(joint_name_list.begin(), joint_name_list.end(), wheel_left);
-        auto right_wheel_ptr = find(joint_name_list.begin(), joint_name_list.end(), wheel_right);    
 
         if(first){
             first = false;
+            // RCLCPP_INFO_STREAM(get_logger(), "***********FIRST IF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
         }
         else{
+            const auto left_wheel_ptr = std::find(js.name.begin(), js.name.end(), wheel_left);
+            const auto right_wheel_ptr = std::find(js.name.begin(), js.name.end(), wheel_right);    
+            // RCLCPP_INFO_STREAM(get_logger(), "***********ELSE IF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
             //not first time, gonna pair with last_joint_state
             // If left wheel was found 
             // Reference: https://www.geeksforgeeks.org/how-to-find-index-of-a-given-element-in-a-vector-in-cpp/
-            if ((left_wheel_ptr != joint_name_list.end()) && (right_wheel_ptr != joint_name_list.end()))  
+            if ((left_wheel_ptr != js.name.end()) && (right_wheel_ptr != js.name.end()))  
             {   // calculating the index 
+                RCLCPP_INFO_STREAM(get_logger(), "***********ELSE IF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
                 int left_index = left_wheel_ptr - joint_name_list.begin(); 
                 int right_index = right_wheel_ptr - joint_name_list.begin();
                 double left_wheel_angle = joint_position_list[left_index];
@@ -179,11 +186,9 @@ private:
                 odom_publisher_->publish(odom);
 
                 ///TF BROADCAST
-                geometry_msgs::msg::TransformStamped transformStamped;
                 
+                RCLCPP_INFO_STREAM(get_logger(), "!!!!!!!!!?????? " << transformStamped.header.frame_id << " " << transformStamped.child_frame_id);
                 transformStamped.header.stamp = js.header.stamp;
-                transformStamped.header.frame_id = odom_id;
-                transformStamped.child_frame_id = body_id;
                 transformStamped.transform.translation.x = robot.get_current_config().translation().x;
                 transformStamped.transform.translation.y = robot.get_current_config().translation().y;
                 transformStamped.transform.rotation.x = q.x();
@@ -220,6 +225,7 @@ private:
     turtlelib::DiffDrive robot= turtlelib::DiffDrive(0.0, 0.0);
     nav_msgs::msg::Odometry odom;
     std::unique_ptr<tf2_ros::TransformBroadcaster> br;
+    geometry_msgs::msg::TransformStamped transformStamped;
     bool first = true;
 };
 

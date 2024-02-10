@@ -58,8 +58,7 @@ public:
   : Node("circle")
   {
 
-    turtlelib::DiffDrive temp(wheel_radius, track_width);
-    robot = temp;
+    turtlelib::DiffDrive robot{wheel_radius, track_width};
 
     ///parameter delcaration
     this->declare_parameter("rate", 100.);
@@ -93,8 +92,6 @@ public:
 
     timer_ = create_wall_timer(
     rate, std::bind(&Circle::timer_callback, this));
-    
-
   }
 
 
@@ -121,7 +118,7 @@ private:
     void reverse(std::shared_ptr<std_srvs::srv::Empty::Request> request, std::shared_ptr<std_srvs::srv::Empty::Response> response){
         if(velocity !=0 && radius != 0){
           ifstop = false;
-          command.linear.x = velocity*radius; /// the linear velocity is changed to the opposite direction based on angular velocity
+          command.linear.x = -velocity*radius; /// the linear velocity is changed to the opposite direction based on angular velocity
           command.angular.z = -velocity; /// the angular velocity is changed to the opposite direction
         }
     }
@@ -145,7 +142,7 @@ private:
     geometry_msgs::msg::Twist command;
     double radius, velocity;
     double track_width, wheel_radius;
-    turtlelib::DiffDrive robot= turtlelib::DiffDrive(0.0, 0.0);
+    turtlelib::DiffDrive robot;
 };
 
 

@@ -58,8 +58,7 @@ public:
   Odometry()
   : Node("odometry")
   {
-    turtlelib::DiffDrive temp(track_width, wheel_radius);
-    robot = temp;
+
 
     ///parameter delcaration
     declare_parameter("body_id", body_id);
@@ -87,13 +86,13 @@ public:
 
     declare_parameter("wheel_radius", -1.);
     wheel_radius = get_parameter("wheel_radius").as_double();
-    if(wheel_radius == 0 || wheel_radius < 0){
+    if(wheel_radius == -1.0){
         RCLCPP_DEBUG_STREAM(get_logger(), "Wheel_radius error" << 4);
     }
 
     declare_parameter("track_width", -1.);
     track_width = get_parameter("track_width").as_double();
-    if(track_width == 0 || track_width < 0){
+    if(track_width == -1.0){
         RCLCPP_DEBUG_STREAM(get_logger(), "Track_width error" << 4);
     }
 
@@ -101,8 +100,10 @@ public:
     odom.header.frame_id = odom_id; //relatively world id?
     odom.child_frame_id = body_id;
     transformStamped.header.frame_id = odom_id;
-    transformStamped.child_frame_id = body_id;
-
+    transformStamped.child_frame_id = body_id;  
+    //redefine the robot wheel_radius
+    robot = turtlelib::DiffDrive(wheel_radius, track_width);
+     RCLCPP_INFO_STREAM(get_logger(), "WHEEL RADIUS: " << robot.get_radius()<< " TRACK WIDTH: " << robot.get_track_width());
     /// joint state subscriber and odom publisher
     joint_state_subscription_ = create_subscription<sensor_msgs::msg::JointState>(
       "joint_states", 10, std::bind(&Odometry::js_callback, this, std::placeholders::_1));
@@ -132,24 +133,29 @@ private:
             // RCLCPP_INFO_STREAM(get_logger(), "***********FIRST IF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
         }
         else{
-            const auto left_wheel_ptr = std::find(js.name.begin(), js.name.end(), wheel_left);
-            const auto right_wheel_ptr = std::find(js.name.begin(), js.name.end(), wheel_right);    
-            // RCLCPP_INFO_STREAM(get_logger(), "***********ELSE IF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
-            //not first time, gonna pair with last_joint_state
-            // If left wheel was found 
-            // Reference: https://www.geeksforgeeks.org/how-to-find-index-of-a-given-element-in-a-vector-in-cpp/
-            if ((left_wheel_ptr != js.name.end()) && (right_wheel_ptr != js.name.end()))  
-            {   // calculating the index 
-                RCLCPP_INFO_STREAM(get_logger(), "***********ELSE IF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
-                int left_index = left_wheel_ptr - joint_name_list.begin(); 
-                int right_index = right_wheel_ptr - joint_name_list.begin();
-                double left_wheel_angle = joint_position_list[left_index];
-                double right_wheel_angle = joint_position_list[right_index];
-                double left_wheel_velocity = joint_velocity_list[left_index];
-                double right_wheel_velocity = joint_velocity_list[right_index];
+            auto left_index = -1;
+            auto right_index = -1;
+            for (long unsigned int i = 0; i < js.name.size(); i++){
+                if (js.name[i] == wheel_left){
+                    left_index = i;
+                }
+                else if (js.name[i] == wheel_right){
+                    right_index = i;
+                }
+            }
 
-                const auto dl = left_wheel_angle - last_joint_state.position[left_index];
-                const auto dr = right_wheel_angle - last_joint_state.position[right_index];
+            if (left_index != -1 && right_index != -1)  
+            {   // calculating the index 
+                // RCLCPP_INFO_STREAM(get_logger(), "***********ELSE IF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
+                RCLCPP_INFO_STREAM(get_logger(), "js_l" << joint_position_list[left_index] << " js_r" << joint_position_list[right_index]);
+                // double left_wheel_angle = joint_position_list[left_index];
+                // double right_wheel_angle = joint_position_list[right_index];
+
+                // double left_wheel_velocity = joint_velocity_list[left_index];
+                // double right_wheel_velocity = joint_velocity_list[right_index];
+
+                const auto dl = joint_position_list.at(left_index) - last_joint_state.position.at(left_index);
+                const auto dr = joint_position_list.at(right_index) - last_joint_state.position.at(right_index);
                 const auto currTime = js.header.stamp.sec  + 1e-9 * js.header.stamp.nanosec;
                 const auto lastTime = last_joint_state.header.stamp.sec + 1e-9 * last_joint_state.header.stamp.nanosec;
                 const auto dt = currTime - lastTime;
@@ -159,7 +165,10 @@ private:
                 const auto prev_phi = robot.get_current_config().rotation();
 
                 // update robot config and everything
-                robot.forwardKinematics(WheelState{dl, dr});
+                RCLCPP_INFO_STREAM(get_logger(), "FORWARD KINEMATICS BEFORE!!!" << robot.get_current_config());
+                robot.forwardKinematics(turtlelib::WheelState{dl, dr});
+                // RCLCPP_INFO_STREAM(get_logger(), "dl" << dl << " dr" << dr << " dt" << dt);
+                RCLCPP_INFO_STREAM(get_logger(), "FORWARD KINEMATICS AFTER!!!" << robot.get_current_config());
 
                 ///ODOM POSE PART
                 ///define odom pose/pose
@@ -178,7 +187,7 @@ private:
                 ///define odom twist/twist
                 odom.twist.twist.linear.x = (robot.get_current_config().translation().x - prev_x) / dt;
                 odom.twist.twist.linear.y = (robot.get_current_config().translation().y - prev_y) / dt;
-                odom.twist.twist.angular.z = normalize_angle(robot.get_current_config().rotation() - prev_phi) / dt;
+                odom.twist.twist.angular.z = normalize_angle((robot.get_current_config().rotation() - prev_phi) / dt);
 
 
 
@@ -187,9 +196,10 @@ private:
 
                 ///TF BROADCAST
                 
-                RCLCPP_INFO_STREAM(get_logger(), "!!!!!!!!!?????? " << transformStamped.header.frame_id << " " << transformStamped.child_frame_id);
+                // RCLCPP_INFO_STREAM(get_logger(), "!!!!!!!!!?????? " << transformStamped.header.frame_id << " " << transformStamped.child_frame_id);
                 transformStamped.header.stamp = js.header.stamp;
                 transformStamped.transform.translation.x = robot.get_current_config().translation().x;
+
                 transformStamped.transform.translation.y = robot.get_current_config().translation().y;
                 transformStamped.transform.rotation.x = q.x();
                 transformStamped.transform.rotation.y = q.y();
@@ -197,7 +207,6 @@ private:
                 transformStamped.transform.rotation.w = q.w();
                 br->sendTransform(transformStamped);
             }
-       
             else{
                 RCLCPP_DEBUG_STREAM(get_logger(), "Wheel ID not found" << 4);
             } 
@@ -222,7 +231,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_subscription_;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
     rclcpp::Service<nuturtle_control::srv::InitialPose>::SharedPtr initial_pose_;
-    turtlelib::DiffDrive robot= turtlelib::DiffDrive(0.0, 0.0);
+    turtlelib::DiffDrive robot;
     nav_msgs::msg::Odometry odom;
     std::unique_ptr<tf2_ros::TransformBroadcaster> br;
     geometry_msgs::msg::TransformStamped transformStamped;

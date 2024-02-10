@@ -31,6 +31,8 @@ namespace turtlelib
         double track_width;
     
     public:
+        /// @brief models the kinematics of a differential drive robot with default wheel track and wheel radius.
+        DiffDrive();
 
         /// @brief models the kinematics of a differential drive robot with a given wheel track and wheel radius.
         /// @param wheel_radius
@@ -67,6 +69,11 @@ namespace turtlelib
         /// @param twist 
         /// @return wheel velocity
         WheelState inverseKinematics(Twist2D twist);
+
+        void set_radius(double radius);
+
+        void set_track_width(double width);
+        
     }; 
 }
 

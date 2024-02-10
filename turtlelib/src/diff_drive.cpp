@@ -6,7 +6,12 @@
 #include <stdexcept>
 
 namespace turtlelib
-{   
+{   DiffDrive::DiffDrive():
+        w{WheelState{0.0, 0.0}},
+        q{Transform2D()},
+        wheel_radius{0.0},
+        track_width{0.0}
+    {}
 
     DiffDrive::DiffDrive(double wheel_radius, double track_width):
         w{WheelState{0.0, 0.0}},
@@ -35,38 +40,53 @@ namespace turtlelib
         return w;
     }
     
-    Transform2D DiffDrive:: get_current_config(){
+    Transform2D DiffDrive::get_current_config(){
         return q;
     }
     void DiffDrive::forwardKinematics(WheelState newWheelState){
-        //eq 13.15
+        //updating the wheel state
         double newLeft = newWheelState.l;
         double newRight = newWheelState.r;
-        auto dPhi = -wheel_radius/(track_width)*newLeft + wheel_radius/(track_width)*newRight;
-        auto dx = wheel_radius/2*cos(q.rotation())*newLeft + wheel_radius/2*cos(q.rotation())*newRight;
-        auto dy = wheel_radius/2*sin(q.rotation())*newLeft + wheel_radius/2*sin(q.rotation())*newRight;
 
         w.l += newLeft;
         w.r += newRight;
-        auto newPhi = normalize_angle(q.rotation() + dPhi);
-        auto newdx = q.translation().x + dx;
-        auto newdy = q.translation().y + dy;
-        q = Transform2D(Vector2D{newdx, newdy}, newPhi);
+
+        //eq 13.34
+        auto twist_w = (wheel_radius / track_width) * (newWheelState.r - newWheelState.l);
+        auto twist_x = (wheel_radius / 2.0) * (newWheelState.l + newWheelState.r);
+        auto twist_y = 0.0;
+
+        Transform2D Tbbprime = integrate_twist(Twist2D{twist_w, twist_x, twist_y});
+        Transform2D Tsb = q;
+        Transform2D Tsbprime = Tsb*Tbbprime; //curr q is in Tsb
+
+        q = Tsbprime;
     }
 
     WheelState DiffDrive::inverseKinematics(Twist2D twist){
-        if(almost_equal(twist.y, 0)){
+        if(almost_equal(twist.y, 0.0)){
             const auto omega = twist.omega;
             const auto tx = twist.x;
             ///MR Formula 13.34
-            auto newleftWheel = 1/(2*wheel_radius)*(2*tx - track_width*omega);
-            auto newrightWheel = 1/(2*wheel_radius)*(track_width*omega + 2*tx);
+            // auto newleftWheel = 1/(2*wheel_radius)*(2*tx - track_width*omega);
+            // auto newrightWheel = 1/(2*wheel_radius)*(track_width*omega + 2*tx);
+            auto d = track_width/2.0;
+            auto newleftWheel = (tx-d*omega)/wheel_radius;
+            auto newrightWheel = (tx+d*omega)/wheel_radius;
+
             return WheelState{newleftWheel, newrightWheel};
         }
         else{
             throw std::logic_error("Slip existing, twist y component not equal to 0.");
         }
-            
-
     }
+
+    void DiffDrive::set_radius(double radius){
+        wheel_radius = radius;
+    }
+
+    void DiffDrive::set_track_width(double width){
+        track_width = width;
+    }    
+
 }

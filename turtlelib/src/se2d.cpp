@@ -81,22 +81,21 @@ Twist2D Transform2D::operator()(Twist2D v) const
 Transform2D Transform2D::inv() const
 {
   Transform2D newTrans;
-  newTrans.linear.x = -linear.x * cos(angular) - linear.y * sin(angular);
-  newTrans.linear.y = -linear.y * cos(angular) + linear.x * sin(angular);
-  auto oldAngular = angular;
-  newTrans.angular = -oldAngular;
+  newTrans.angular = -angular;
+  newTrans.linear.x = -(linear.x * cos(newTrans.angular)) - linear.y * sin(newTrans.angular);
+  newTrans.linear.y = linear.y * cos(newTrans.angular) - (linear.x * sin(newTrans.angular));
   return newTrans;
 }
 
 Transform2D & Transform2D::operator*=(const Transform2D & rhs)
 {
-  const auto new_angular = angular + rhs.angular;
   const auto new_x = rhs.linear.x * cos(angular) - rhs.linear.y * sin(angular) + linear.x;
   const auto new_y = rhs.linear.x * sin(angular) + rhs.linear.y * cos(angular) + linear.y;
-
-  angular = new_angular;
+  const auto newRotationAngle = normalize_angle(angular + rhs.angular);
   linear.x = new_x;
   linear.y = new_y;
+  angular = newRotationAngle;
+
   return *this;
 }
 
@@ -145,8 +144,8 @@ Transform2D operator*(Transform2D lhs, const Transform2D & rhs)
 }
 
 Transform2D integrate_twist(Twist2D tw){
-  if(tw.omega == 0){
-    return Transform2D(Vector2D{tw.x, tw.y}, 0);
+  if(tw.omega == 0.0){
+    return Transform2D(Vector2D{tw.x, tw.y}, 0.0);
   }
   else{
     const auto xs = tw.y/tw.omega;

@@ -57,13 +57,13 @@ public:
     std::chrono::milliseconds rate = (std::chrono::milliseconds) ((int)(1000. / rate_hz));
 
     declare_parameter("x", 0.);
-    x = get_parameter("x").as_double();
+    x_i = get_parameter("x").as_double();
 
     declare_parameter("y", 0.);
-    y = get_parameter("y").as_double();
+    y_i = get_parameter("y").as_double();
 
     declare_parameter("theta", 0.);
-    theta = get_parameter("theta").as_double();
+    theta_i = get_parameter("theta").as_double();
 
     declare_parameter("arena_x_length", 0.);
     arena_x_length = get_parameter("arena_x_length").as_double();
@@ -94,9 +94,9 @@ public:
     if(track_width == 0 || track_width < 0){
         RCLCPP_DEBUG_STREAM(get_logger(), "Track_width error" << 4);
     }
-
-    turtlelib::DiffDrive temp(wheel_radius, track_width);
-    robot = temp;
+    RCLCPP_INFO_STREAM(get_logger(),wheel_radius);
+    RCLCPP_INFO_STREAM(get_logger(),track_width);
+    // turtlelib::DiffDrive robot(wheel_radius, track_width);
     
     initial = true;
     x0 = 0.0;
@@ -138,9 +138,9 @@ private:
   {
     //if its the first time calling initial, set the initial location
     if (initial) {
-      x0 = x;
-      y0 = y;
-      theta0 = theta;
+      x0 = x_i;
+      y0 = y_i;
+      theta0 = theta_i;
       initial = false;
     }
     // publish timetsep
@@ -148,7 +148,7 @@ private:
     message.data = timestep_;
     time_step_publisher_->publish(message);
     timestep_++;
-    send_transform(x, y, theta);
+    
 
     wallPub();
     obstacle_publisher();
@@ -159,13 +159,16 @@ private:
     auto new_right_angle = delta_right_angle + robot.get_wheel_state().r;
     auto new_left_angle = delta_left_angle + robot.get_wheel_state().l;
     ///use delta wheel degree to update wheel state
-    auto new_wheel_state_delta = turtlelib::WheelState{delta_left_angle, delta_right_angle};
-    robot.forwardKinematics(new_wheel_state_delta);
+    RCLCPP_INFO_STREAM(get_logger(), "x=" << delta_left_angle << " y=" << delta_right_angle);
+    robot.forwardKinematics(turtlelib::WheelState{delta_left_angle, delta_right_angle});
+    RCLCPP_INFO_STREAM(get_logger(),robot.get_current_config().translation().x);
+    RCLCPP_INFO_STREAM(get_logger(),delta_right_angle);
     x = robot.get_current_config().translation().x;
     y = robot.get_current_config().translation().y;
-    
+    theta = robot.get_current_config().rotation();
+    RCLCPP_INFO_STREAM(get_logger(), "x=" << x << " y=" << y << " theta=" << theta);
+    send_transform(x, y, theta);
     //update the sensor call back
-    nuturtlebot_msgs::msg::SensorData sensor_data;
     sensor_data.left_encoder = static_cast<int>(new_right_angle*motor_cmd_per_rad_sec);
     sensor_data.right_encoder = static_cast<int>(new_left_angle*motor_cmd_per_rad_sec);
     sensor_data.stamp = get_clock()->now();
@@ -180,10 +183,10 @@ private:
   {
     RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "RESET IS GOING ON!");
     timestep_ = 0;
-    RCLCPP_INFO_STREAM(get_logger(), "reset x=" << x0 << " y=" << y0 << " theta=" << theta0);
-    x = x0;
-    y = y0;
-    theta = theta0;
+    RCLCPP_INFO_STREAM(get_logger(), "reset x=" << x << " y=" << y << " theta=" << theta);
+    x = x_i;
+    y = y_i;
+    theta = theta_i;
   }
 
   //broadcast the location by giving x y w
@@ -304,10 +307,11 @@ private:
     // just store left and right velocity and do this update in the timer
     left_velocity = wc.left_velocity * motor_cmd_per_rad_sec;   //wc in ticks, get the velocity in rad/s
     right_velocity = wc.right_velocity * motor_cmd_per_rad_sec;
-
+    RCLCPP_INFO_STREAM(
+      get_logger(), "Teleporting service as x=" << left_velocity << " y=" << right_velocity);
   }
 
-
+  double x_i, y_i, theta_i;
   double x, y, theta, rate_hz;
   double arena_x_length, arena_y_length;
   double track_width, wheel_radius, motor_cmd_per_rad_sec;
@@ -317,8 +321,8 @@ private:
   double x0, y0, theta0;
   size_t timestep_;
   size_t cyl_num;
-  int left_velocity = 0; //rad/s
-  int right_velocity = 0;
+  double left_velocity=0.0; //rad/s
+  double right_velocity=0.0;
 
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<std_msgs::msg::UInt64>::SharedPtr time_step_publisher_;
@@ -329,7 +333,8 @@ private:
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   rclcpp::Service<nusim::srv::Teleport>::SharedPtr teleport_;
   rclcpp::Subscription<nuturtlebot_msgs::msg::WheelCommands>::SharedPtr wheel_subscriber_;
-  turtlelib::DiffDrive robot = turtlelib::DiffDrive(0.0, 0.0);
+  turtlelib::DiffDrive robot{0.033, 0.16};
+  nuturtlebot_msgs::msg::SensorData sensor_data;
 };
 
 

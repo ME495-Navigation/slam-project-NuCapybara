@@ -100,23 +100,23 @@ public:
     ///provide the angle (in radians) and velocity (in rad/sec) of each wheel
     joint_state_publisher_ = create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
 
-    auto temp = turtlelib::DiffDrive(wheel_radius, track_width);
+    robot = turtlelib::DiffDrive(wheel_radius, track_width);
     RCLCPP_INFO_STREAM(this->get_logger(), "track width and radius "<< track_width << " "<< wheel_radius);
-    robot = temp;
+    
   }
 
 private:
 
     void cmd_vel_callback(const geometry_msgs::msg::Twist & msg) 
     {   turtlelib::Twist2D twist{msg.angular.z, msg.linear.x, 0.0};
-        RCLCPP_INFO_STREAM(rclcpp::get_logger("turtle_control_test"), "???twist received"<<  msg.angular.z << " " << msg.linear.x);
+        // RCLCPP_INFO_STREAM(rclcpp::get_logger("turtle_control_test"), "???twist received"<<  msg.angular.z << " " << msg.linear.x);
         //omega, x, y
         // twist.omega = msg.angular.z;
         // twist.x = msg.linear.x;
 
         ///transfer radians to motor cmd using motor_cmd_per_rad_sec
         turtlelib::WheelState ws = robot.inverseKinematics(twist);
-        RCLCPP_INFO_STREAM(this->get_logger(), "WheelState as "<< ws.l << " "<< ws.r);
+        // RCLCPP_INFO_STREAM(this->get_logger(), "WheelState as "<< ws.l << " "<< ws.r);
 
         double left_velocity = ws.l / motor_cmd_per_rad_sec;
         double right_velocity = ws.r / motor_cmd_per_rad_sec;
@@ -133,39 +133,48 @@ private:
             right_velocity = -motor_cmd_max;
         }
         nuturtlebot_msgs::msg::WheelCommands wheel_cmd;
-        wheel_cmd.left_velocity = left_velocity;
-        wheel_cmd.right_velocity = right_velocity;
+        wheel_cmd.left_velocity = static_cast<int>(left_velocity);
+        wheel_cmd.right_velocity = static_cast<int>(right_velocity);
         wheel_cmd_publisher_->publish(wheel_cmd);
 
-        RCLCPP_INFO_STREAM(this->get_logger(), "I heard cmd vel as (x, w): "<< msg.linear.x << " "<< msg.angular.z);
-        RCLCPP_INFO_STREAM(this->get_logger(), "control node publish wheel cmd as "<< left_velocity << " "<< right_velocity);
+        // RCLCPP_INFO_STREAM(this->get_logger(), "I heard cmd vel as (x, w): "<< msg.linear.x << " "<< msg.angular.z);
+        // RCLCPP_INFO_STREAM(this->get_logger(), "control node publish wheel cmd as "<< left_velocity << " "<< right_velocity);
     }
 
     void sensor_callback(const nuturtlebot_msgs::msg::SensorData & msg) 
         {
         ///NEED IMPLEMENTATION
-        // RCLCPP_INFO(this->get_logger(), "I heard sensor data as (left, right): '%d %d'", msg.left_encoder, msg.right_encoder);
+        RCLCPP_INFO(this->get_logger(), "I heard sensor data as (left, right): '%d %d'", msg.left_encoder, msg.right_encoder);
         double left_encoder = msg.left_encoder;
         double right_encoder = msg.right_encoder;
-        std::vector<double> joint_pose_vec(2);
-        joint_pose_vec.at(0) = static_cast<double> (left_encoder / encoder_ticks_per_rad);
-        joint_pose_vec.at(1) = static_cast<double> (right_encoder / encoder_ticks_per_rad);
 
-        joint_state.position = joint_pose_vec;
-        joint_state.header.stamp =  msg.stamp; //why not useing the time rn
+        left_wheel_joint = static_cast<double> (left_encoder) / encoder_ticks_per_rad;
+        right_wheel_joint  = static_cast<double> (right_encoder) / encoder_ticks_per_rad;
 
-        if(initial_js){
+
+        if(initial_js == true){
             initial_js = false;
+            joint_state.name = {"wheel_left_joint", "wheel_right_joint"};
+            joint_state.header.stamp =  msg.stamp;
+            joint_state.position = {left_wheel_joint, right_wheel_joint};
+            joint_state.velocity = {0.0, 0.0};
+            
+
         }
         else{
-            const auto currTime = joint_state.header.stamp.sec + joint_state.header.stamp.nanosec * 1e-9;
-            const auto lastTime = last_jointstate.header.stamp.sec + last_jointstate.header.stamp.nanosec * 1e-9;
-            const auto delta_time = currTime - lastTime;
+            auto del_t = msg.stamp.sec + msg.stamp.nanosec * 1e-9 - joint_state.header.stamp.sec -
+            joint_state.header.stamp.nanosec * 1e-9;
 
-            joint_state.velocity = {(joint_state.position[0]- last_jointstate.position[0])/delta_time, (joint_state.position[1] - last_jointstate.position[1])/delta_time};
+            joint_state.position = {left_wheel_joint, right_wheel_joint};
+
+            double left_wheel_velocity =(left_wheel_joint - joint_state.position.at(0)) / del_t;
+            double right_wheel_velocity = (right_wheel_joint - joint_state.position.at(1)) / del_t;
+
+            joint_state.header.stamp = msg.stamp;
+            joint_state.velocity = {left_wheel_velocity, right_wheel_velocity};
+            joint_state_publisher_->publish(joint_state);
         }
-        joint_state_publisher_->publish(joint_state);
-        last_jointstate = joint_state;
+        
     }
 
     
@@ -175,7 +184,8 @@ private:
     bool initial_js = true;
     sensor_msgs::msg::JointState joint_state, last_jointstate;
     double wheel_radius, track_width, motor_cmd_max, motor_cmd_per_rad_sec, encoder_ticks_per_rad, collision_radius;
-    turtlelib::DiffDrive robot= turtlelib::DiffDrive(0.0, 0.0);
+    double left_wheel_joint, right_wheel_joint;
+    turtlelib::DiffDrive robot;
     rclcpp::Publisher<nuturtlebot_msgs::msg::WheelCommands>::SharedPtr wheel_cmd_publisher_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_subscription_;
     rclcpp::Subscription<nuturtlebot_msgs::msg::SensorData>::SharedPtr sensor_data_subscription_;

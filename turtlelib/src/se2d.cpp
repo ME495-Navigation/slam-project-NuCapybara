@@ -80,10 +80,16 @@ Twist2D Transform2D::operator()(Twist2D v) const
 
 Transform2D Transform2D::inv() const
 {
+  // Transform2D newTrans;
+  // newTrans.angular = -angular;
+  // newTrans.linear.x = -(linear.x * cos(newTrans.angular)) - linear.y * sin(newTrans.angular);
+  // newTrans.linear.y = linear.y * cos(newTrans.angular) - (linear.x * sin(newTrans.angular));
+  // return newTrans;
   Transform2D newTrans;
-  newTrans.angular = -angular;
-  newTrans.linear.x = -(linear.x * cos(newTrans.angular)) - linear.y * sin(newTrans.angular);
-  newTrans.linear.y = linear.y * cos(newTrans.angular) - (linear.x * sin(newTrans.angular));
+  newTrans.linear.x = -linear.x * cos(angular) - linear.y * sin(angular);
+  newTrans.linear.y = -linear.y * cos(angular) + linear.x * sin(angular);
+  auto oldAngular = angular;
+  newTrans.angular = -oldAngular;
   return newTrans;
 }
 

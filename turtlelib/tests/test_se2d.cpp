@@ -255,7 +255,48 @@ TEST_CASE("Inverting a transform", "[transform2D]") {    //Kyle Wang
         REQUIRE_THAT(dd.get_current_config().translation().x, Catch::Matchers::WithinAbs(1.0, 1e-5));
         REQUIRE_THAT(dd.get_current_config().translation().y, Catch::Matchers::WithinAbs(1.0, 1e-5));
         REQUIRE_THAT(dd.get_current_config().rotation(), Catch::Matchers::WithinAbs(0.5*PI, 1e-5));
-
-      
     }
+
+
+
+      TEST_CASE("Robot drives frowards"){                              // Shedd, Kassidy (Mine)
+
+      DiffDrive robot{Transform2D{Vector2D{0.0, 0.0}, 0.0}, 0.033, 0.16};
+      turtlelib::WheelState pos = {0.5, 0.5};
+
+      robot.forwardKinematics(pos);
+      Transform2D rs = robot.get_current_config();
+
+      REQUIRE_THAT(rs.translation().x, Catch::Matchers::WithinRel(0.0165, 0.1e-5));
+      REQUIRE_THAT(rs.translation().y, Catch::Matchers::WithinRel(0.0, 0.1e-5));
+      REQUIRE_THAT(rs.rotation(), Catch::Matchers::WithinRel(0.0, 0.1e-5));   
+  }
+        
+      TEST_CASE("Robot executes pure rotation"){                       // Shedd, Kassidy (Mine)
+ 
+      DiffDrive robot{Transform2D{Vector2D{0.0, 0.0}, 0.0}, 0.033, 0.16};;
+      turtlelib::WheelState pos = {-0.5, 0.5};
+
+      robot.forwardKinematics(pos);
+      Transform2D rs = robot.get_current_config();
+
+      REQUIRE_THAT(rs.translation().x, Catch::Matchers::WithinRel(0.0, 1e-5));
+      REQUIRE_THAT(rs.translation().y, Catch::Matchers::WithinRel(0.0, 1e-5));
+      REQUIRE_THAT(rs.rotation(), Catch::Matchers::WithinRel(0.20625, 1e-4));   
+  }
+        
+  TEST_CASE("Robot follows arc of a circle"){                     // Shedd, Kassidy (Mine)
+      DiffDrive robot{Transform2D{Vector2D{0.0, 0.0}, 0.0}, 0.033, 0.16};;
+      turtlelib::WheelState pos ={0.5, 2.0};
+
+      robot.forwardKinematics(pos);
+      Transform2D rs = robot.get_current_config();
+
+      REQUIRE_THAT(rs.translation().x, Catch::Matchers::WithinRel(0.040595, 1e-4));
+      REQUIRE_THAT(rs.translation().y, Catch::Matchers::WithinRel(0.0063301, 1e-5));
+      REQUIRE_THAT(rs.rotation(), Catch::Matchers::WithinRel(0.30938, 1e-4));  
+  }
+
+        
+
 }

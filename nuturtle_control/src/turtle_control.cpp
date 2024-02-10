@@ -101,7 +101,7 @@ public:
     joint_state_publisher_ = create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
 
     robot = turtlelib::DiffDrive(wheel_radius, track_width);
-    RCLCPP_INFO_STREAM(this->get_logger(), "track width and radius "<< track_width << " "<< wheel_radius);
+    // RCLCPP_INFO_STREAM(this->get_logger(), "track width and radius "<< track_width << " "<< wheel_radius);
     
   }
 
@@ -144,7 +144,7 @@ private:
     void sensor_callback(const nuturtlebot_msgs::msg::SensorData & msg) 
         {
         ///NEED IMPLEMENTATION
-        RCLCPP_INFO(this->get_logger(), "I heard sensor data as (left, right): '%d %d'", msg.left_encoder, msg.right_encoder);
+        // RCLCPP_INFO(this->get_logger(), "I heard sensor data as (left, right): '%d %d'", msg.left_encoder, msg.right_encoder);
         double left_encoder = msg.left_encoder;
         double right_encoder = msg.right_encoder;
 

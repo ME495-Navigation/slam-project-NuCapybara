@@ -17,7 +17,7 @@
 /// CLIENTS:
 ///     none
 /// BROADCASTS:
-///    nusim/world -> red/base_footprint
+///   odom -> blue/base_footprint
 
 
 #include <chrono>
@@ -63,14 +63,14 @@ public:
     ///parameter delcaration
     declare_parameter("body_id", body_id);
     body_id = get_parameter("body_id").as_string();
-    RCLCPP_INFO_STREAM(get_logger(), "BODY ID: " << body_id);
+    // RCLCPP_INFO_STREAM(get_logger(), "BODY ID: " << body_id);
     if(body_id.empty()){
         RCLCPP_DEBUG_STREAM(get_logger(), "BodyID not specified" << 4);
     }
     
     declare_parameter("odom_id", odom_id);
     odom_id = get_parameter("odom_id").as_string();
-    RCLCPP_INFO_STREAM(get_logger(), "Odom ID: " << odom_id);
+    // RCLCPP_INFO_STREAM(get_logger(), "Odom ID: " << odom_id);
 
     declare_parameter("wheel_left", wheel_left);
     wheel_left = get_parameter("wheel_left").as_string();
@@ -103,7 +103,7 @@ public:
     transformStamped.child_frame_id = body_id;  
     //redefine the robot wheel_radius
     robot = turtlelib::DiffDrive(wheel_radius, track_width);
-     RCLCPP_INFO_STREAM(get_logger(), "WHEEL RADIUS: " << robot.get_radius()<< " TRACK WIDTH: " << robot.get_track_width());
+    // RCLCPP_INFO_STREAM(get_logger(), "WHEEL RADIUS: " << robot.get_radius()<< " TRACK WIDTH: " << robot.get_track_width());
     /// joint state subscriber and odom publisher
     joint_state_subscription_ = create_subscription<sensor_msgs::msg::JointState>(
       "joint_states", 10, std::bind(&Odometry::js_callback, this, std::placeholders::_1));
@@ -119,10 +119,9 @@ public:
 private:
 
     void js_callback(const sensor_msgs::msg::JointState & js){
-        // RCLCPP_INFO_STREAM(get_logger(), "!!!!!!!!!?????? JS CALLBACK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
-        ///Frame this joint state is associated with
+
         std::string js_frameid = js.header.frame_id;
-        const auto time_stamp = js.header.stamp;
+        // const auto time_stamp = js.header.stamp;
         const auto joint_name_list = js.name;
         const auto joint_position_list = js.position;
         const auto joint_velocity_list = js.velocity;
@@ -130,7 +129,7 @@ private:
 
         if(first){
             first = false;
-            // RCLCPP_INFO_STREAM(get_logger(), "***********FIRST IF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
+
         }
         else{
             auto left_index = -1;
@@ -138,16 +137,18 @@ private:
             for (long unsigned int i = 0; i < js.name.size(); i++){
                 if (js.name[i] == wheel_left){
                     left_index = i;
+                    // right_index = i;
                 }
                 else if (js.name[i] == wheel_right){
                     right_index = i;
+                    // left_index = i;
                 }
             }
 
             if (left_index != -1 && right_index != -1)  
             {   // calculating the index 
                 // RCLCPP_INFO_STREAM(get_logger(), "***********ELSE IF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
-                RCLCPP_INFO_STREAM(get_logger(), "js_l" << joint_position_list[left_index] << " js_r" << joint_position_list[right_index]);
+                // RCLCPP_INFO_STREAM(get_logger(), "js_l" << joint_position_list[left_index] << " js_r" << joint_position_list[right_index]);
                 // double left_wheel_angle = joint_position_list[left_index];
                 // double right_wheel_angle = joint_position_list[right_index];
 
@@ -165,14 +166,14 @@ private:
                 const auto prev_phi = robot.get_current_config().rotation();
 
                 // update robot config and everything
-                RCLCPP_INFO_STREAM(get_logger(), "FORWARD KINEMATICS BEFORE!!!" << robot.get_current_config());
+                // RCLCPP_INFO_STREAM(get_logger(), "FORWARD KINEMATICS BEFORE!!!" << robot.get_current_config());
                 robot.forwardKinematics(turtlelib::WheelState{dl, dr});
                 // RCLCPP_INFO_STREAM(get_logger(), "dl" << dl << " dr" << dr << " dt" << dt);
-                RCLCPP_INFO_STREAM(get_logger(), "FORWARD KINEMATICS AFTER!!!" << robot.get_current_config());
+                // RCLCPP_INFO_STREAM(get_logger(), "FORWARD KINEMATICS AFTER!!!" << robot.get_current_config());
 
                 ///ODOM POSE PART
                 ///define odom pose/pose
-                odom.header.stamp = time_stamp;
+                odom.header.stamp = get_clock()->now();
                 odom.pose.pose.position.x = robot.get_current_config().translation().x;
                 odom.pose.pose.position.y = robot.get_current_config().translation().y;
                 ///define odom pose/orientation(quaternion)
@@ -197,7 +198,7 @@ private:
                 ///TF BROADCAST
                 
                 // RCLCPP_INFO_STREAM(get_logger(), "!!!!!!!!!?????? " << transformStamped.header.frame_id << " " << transformStamped.child_frame_id);
-                transformStamped.header.stamp = js.header.stamp;
+                transformStamped.header.stamp = get_clock()->now();
                 transformStamped.transform.translation.x = robot.get_current_config().translation().x;
 
                 transformStamped.transform.translation.y = robot.get_current_config().translation().y;

@@ -20,8 +20,8 @@
         <!-- launch turtle_control and odometry if robot = nusim -->
         <node pkg="nuturtle_control" exec="turtle_control_node" name="turtle_control">
             <param from="$(find-pkg-share nuturtle_description)/diff_params.yaml" />
-            <remap from="wheel_cmd" to="red/wheel_cmd" />
-            <remap from="joint_states" to="blue/joint_states" />
+            <remap from="wheel_cmd" to="red/wheel_cmd"/>
+            <remap from="joint_states" to="red/joint_states" />
             <remap from="sensor_data" to="red/sensor_data" />
         </node>
 
@@ -31,7 +31,7 @@
             <param name="odom_id" value="odom" />
             <param name="wheel_left" value="wheel_left_joint" />
             <param name="wheel_right" value="wheel_right_joint" />
-            <remap from="joint_states" to="blue/joint_states"/>
+            <remap from="joint_states" to="red/joint_states"/>
         </node>
 
         <!-- launch nusim node -->
@@ -44,13 +44,13 @@
         <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py">
             <arg name="color" value="red" />
             <arg name="use_rviz" value="false" />
-            <arg name="use_jsp" value="true" />
+            <arg name="use_jsp" value="false" />
         </include>
 
         <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py">
             <arg name="color" value="blue" />
             <arg name="use_rviz" value="false" />
-            <arg name="use_jsp" value="false" />
+            <arg name="use_jsp" value="true" />
         </include>
     </group>
 

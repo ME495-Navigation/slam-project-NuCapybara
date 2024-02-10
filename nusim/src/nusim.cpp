@@ -94,9 +94,13 @@ public:
     if(track_width == 0 || track_width < 0){
         RCLCPP_DEBUG_STREAM(get_logger(), "Track_width error" << 4);
     }
-    RCLCPP_INFO_STREAM(get_logger(),wheel_radius);
-    RCLCPP_INFO_STREAM(get_logger(),track_width);
-    // turtlelib::DiffDrive robot(wheel_radius, track_width);
+
+    declare_parameter("encoder_ticks_per_rad", -1.);
+    encoder_ticks_per_rad = get_parameter("encoder_ticks_per_rad").as_double();
+    if(encoder_ticks_per_rad == 0 || encoder_ticks_per_rad < 0){
+        RCLCPP_DEBUG_STREAM(get_logger(), "encoder_ticks_per_rad error" << 4);
+    }
+
     
     initial = true;
     x0 = 0.0;
@@ -128,6 +132,7 @@ public:
       "red/sensor_data",
       10);
     //wall publisher
+    
     rclcpp::QoS qos_policy = rclcpp::QoS(rclcpp::KeepLast(10)).transient_local();
     wall_pub = create_publisher<visualization_msgs::msg::MarkerArray>("~/walls", qos_policy);
     obs_pub = create_publisher<visualization_msgs::msg::MarkerArray>("~/obstacles", qos_policy);
@@ -159,18 +164,17 @@ private:
     auto new_right_angle = delta_right_angle + robot.get_wheel_state().r;
     auto new_left_angle = delta_left_angle + robot.get_wheel_state().l;
     ///use delta wheel degree to update wheel state
-    RCLCPP_INFO_STREAM(get_logger(), "x=" << delta_left_angle << " y=" << delta_right_angle);
+    RCLCPP_INFO_STREAM(get_logger(), "left=" << delta_left_angle << " right=" << delta_right_angle);
     robot.forwardKinematics(turtlelib::WheelState{delta_left_angle, delta_right_angle});
-    RCLCPP_INFO_STREAM(get_logger(),robot.get_current_config().translation().x);
-    RCLCPP_INFO_STREAM(get_logger(),delta_right_angle);
+
     x = robot.get_current_config().translation().x;
     y = robot.get_current_config().translation().y;
     theta = robot.get_current_config().rotation();
-    RCLCPP_INFO_STREAM(get_logger(), "x=" << x << " y=" << y << " theta=" << theta);
+
     send_transform(x, y, theta);
     //update the sensor call back
-    sensor_data.left_encoder = static_cast<int>(new_right_angle*motor_cmd_per_rad_sec);
-    sensor_data.right_encoder = static_cast<int>(new_left_angle*motor_cmd_per_rad_sec);
+    sensor_data.left_encoder = static_cast<int>(new_left_angle*encoder_ticks_per_rad);
+    sensor_data.right_encoder = static_cast<int>(new_right_angle*encoder_ticks_per_rad);
     sensor_data.stamp = get_clock()->now();
     sensor_data_pub->publish(sensor_data);
 
@@ -181,9 +185,9 @@ private:
     std::shared_ptr<std_srvs::srv::Empty::Request>,
     std::shared_ptr<std_srvs::srv::Empty::Response>)
   {
-    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "RESET IS GOING ON!");
+    // RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "RESET IS GOING ON!");
     timestep_ = 0;
-    RCLCPP_INFO_STREAM(get_logger(), "reset x=" << x << " y=" << y << " theta=" << theta);
+    // RCLCPP_INFO_STREAM(get_logger(), "reset x=" << x << " y=" << y << " theta=" << theta);
     x = x_i;
     y = y_i;
     theta = theta_i;
@@ -307,12 +311,12 @@ private:
     // just store left and right velocity and do this update in the timer
     left_velocity = wc.left_velocity * motor_cmd_per_rad_sec;   //wc in ticks, get the velocity in rad/s
     right_velocity = wc.right_velocity * motor_cmd_per_rad_sec;
-    RCLCPP_INFO_STREAM(
-      get_logger(), "Teleporting service as x=" << left_velocity << " y=" << right_velocity);
+    // RCLCPP_INFO_STREAM(
+    //   get_logger(), "Teleporting service as x=" << left_velocity << " y=" << right_velocity);
   }
 
   double x_i, y_i, theta_i;
-  double x, y, theta, rate_hz;
+  double x, y, theta, rate_hz, encoder_ticks_per_rad;
   double arena_x_length, arena_y_length;
   double track_width, wheel_radius, motor_cmd_per_rad_sec;
   std::vector<double> obx, oby;

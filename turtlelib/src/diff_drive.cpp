@@ -57,6 +57,7 @@ namespace turtlelib
         auto twist_y = 0.0;
 
         Transform2D Tbbprime = integrate_twist(Twist2D{twist_w, twist_x, twist_y});
+        // Tbbprime = Transform2D{Vector2D{Tbbprime.translation().x/2000, Tbbprime.translation().y/2000}, Tbbprime.rotation()};
         Transform2D Tsb = q;
         Transform2D Tsbprime = Tsb*Tbbprime; //curr q is in Tsb
 

@@ -12,7 +12,7 @@ This repository consists of several ROS packages
 ## Demo Videos
 
 ### Turtlebot simulation Video
-<video src="https://github.com/ME495-Navigation/slam-project-NuCapybara/assets/144244355/cea9f3fb-5d8d-497c-8848-8ad3a64976a" controls title="Simulation"></video>
+<video src="https://github.com/ME495-Navigation/slam-project-NuCapybara/assets/144244355/08c6739b-bc16-438b-948c-263814212cb3" controls title="Simulation"></video>
 
 ### Turtlebot Performance
 <video src="https://github.com/ME495-Navigation/slam-project-NuCapybara/assets/144244355/7f7e29e0-7a01-46e1-9e1d-21a7796f2f04" controls title="Real scene"></video>

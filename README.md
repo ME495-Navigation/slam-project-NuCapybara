@@ -10,3 +10,6 @@ This repository consists of several ROS packages
 
 
 
+![Simulation Capture](https://github.com/ME495-Navigation/slam-project-NuCapybara/assets/144244355/cea9f3fb-5d8d-497c-8848-8ad3a64976a)
+
+![Realistic Capture](https://github.com/ME495-Navigation/slam-project-NuCapybara/assets/144244355/7f7e29e0-7a01-46e1-9e1d-21a7796f2f04)

@@ -10,24 +10,24 @@ find_package(ament_cmake REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
+install(DIRECTORY launch/
+DESTINATION share/${PROJECT_NAME})
+
+install(DIRECTORY urdf/
+DESTINATION share/${PROJECT_NAME})
+
+install(DIRECTORY config/
+DESTINATION share/${PROJECT_NAME})
+
+install(DIRECTORY meshes/
+DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  find_package(rviz2 REQUIRED)
-  find_package(urdf REQUIRED)
-  find_package(xacro REQUIRED)
+  # find_package(rviz2 REQUIRED)
+  # find_package(urdf REQUIRED)
+  # find_package(xacro REQUIRED)
 
-  install(DIRECTORY launch/
-  DESTINATION share/${PROJECT_NAME})
-
-  install(DIRECTORY urdf/
-  DESTINATION share/${PROJECT_NAME})
-
-  install(DIRECTORY config/
-  DESTINATION share/${PROJECT_NAME})
-
-  install(DIRECTORY meshes/
-  DESTINATION share/${PROJECT_NAME})
 
   # the following line skips the linter which checks for copyrights
   # comment the line when a copyright and license is added to all source files

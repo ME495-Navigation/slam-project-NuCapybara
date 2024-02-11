@@ -25,7 +25,6 @@ find_package(std_srvs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(catch_ros2 REQUIRED)
 find_package(nuturtle_description REQUIRED)
 
 
@@ -74,7 +73,7 @@ install(DIRECTORY
 
 if(BUILD_TESTING)
   include(CTest)
-
+  find_package(catch_ros2 REQUIRED)
   ###########################
   ## INTEGRATION TEST NODE ##
   ###########################

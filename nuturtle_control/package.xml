@@ -17,8 +17,6 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>catkin</buildtool_depend>
-  <depend>urdf</depend>
-  <depend>xacro</depend>
   <depend>nuturtlebot_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>

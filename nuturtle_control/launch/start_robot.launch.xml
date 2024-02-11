@@ -66,7 +66,11 @@
             <param name="odom_id" value="odom" />
             <param name="wheel_left" value="wheel_left_joint" />
             <param name="wheel_right" value="wheel_right_joint" />
+            <remap from="joint_states" to="blue/joint_states"/>
         </node>
+
+        <node pkg="numsr_turtlebot" exec="numsr_turtlebot"/>
+
 
         <!-- <node pkg="numsr_turtlebot" exec="numsr_turtlebot" name="numsr_turtlebot"/> -->
 
@@ -81,7 +85,15 @@
         if="$(eval '\'$(var use_rviz)\' == \'true\' and \'$(var robot)\' != \'localhost\' and \'$(var robot)\' != \'nusim\' ')" > 
     </node>
 
+
+    <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py"
+    if="$(eval '\'$(var use_rviz)\' == \'true\' and \'$(var robot)\' != \'localhost\' and \'$(var robot)\' != \'nusim\' ')" >
+        <arg name="color" value="blue" />
+        <arg name="use_rviz" value="false" />
+        <arg name="use_jsp" value="false" />
+    </include>
+
     <!-- publish transform between nusim/world and odom frame -->
-    <node pkg="tf2_ros" exec="static_transform_publisher" name="world_to_odom" args="0 0 0 0 0 0 nusim/world odom"/>
+    <node pkg="tf2_ros" exec="static_transform_publisher" args="0 0 0 0 0 0 nusim/world odom"/>
 
 </launch>

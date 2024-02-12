@@ -209,8 +209,8 @@ TEST_CASE("Inverting a transform", "[transform2D]") {    //Kyle Wang
         REQUIRE_THAT(ws.l, Catch::Matchers::WithinAbs(1-0.5*PI, 1e-5));
         REQUIRE_THAT(ws.r, Catch::Matchers::WithinAbs(1+0.5*PI, 1e-5));
         dd.forwardKinematics(WheelState{ws.l,ws.r});
-        REQUIRE_THAT(dd.get_current_config().translation().x, Catch::Matchers::WithinAbs(1.0, 1e-5));
-        REQUIRE_THAT(dd.get_current_config().translation().y, Catch::Matchers::WithinAbs(0.0, 1e-5));
+        REQUIRE_THAT(dd.get_current_config().translation().x, Catch::Matchers::WithinAbs(0.0, 1e-5));
+        REQUIRE_THAT(dd.get_current_config().translation().y, Catch::Matchers::WithinAbs(0.6366197724, 1e-5));
         REQUIRE_THAT(dd.get_current_config().rotation(), Catch::Matchers::WithinAbs(PI, 1e-5));
     }
 

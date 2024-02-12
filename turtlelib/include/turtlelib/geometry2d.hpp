@@ -112,7 +112,7 @@ namespace turtlelib
         Vector2D & operator-=(const Vector2D & rhs);
 
         /// \brief multiply a vector
-        /// \param rhs - the vector to multiply
+        /// \param scalar - the scalar to multiply
         /// \return a reference to the newly transformed vector
         Vector2D & operator*=(const double & scalar);
     };
@@ -143,8 +143,8 @@ namespace turtlelib
     Vector2D operator-(const Point2D & head, const Point2D & tail);
 
     /// @brief The dot product of two vectors
-    /// @param  Vector2D vector 1
-    /// @param  Vector2D vector 2
+    /// @param v1 vector to multiply
+    /// @param v2 vector to multiply
     /// @return a double representing dot product of v1 and v2
     double dot(Vector2D v1, Vector2D v2);
 

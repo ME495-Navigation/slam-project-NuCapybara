@@ -1,20 +1,20 @@
+/// \file circle.cpp
+/// \brief Publishes wheel commands and joint states of the robot
+/// \brief Subscribes to twist and calculates wheel commands.
+/// \brief Subscribes to sensor data and calculates joint states.
+///
 /// PARAMETERS:
-///     rate (double): frequency of the timer, in Hz
-///     x0 (double): starting x location of the turtlebot (m)
-///     y0 (double): starting y location of the turtlebot (m)
-///     theta0 (double): starting theta location of the turtlebot (rad)
-///     obstacles/x (double[]): list of x coordinates of cylindrical obstacles (m)
-///     obstacles/y (double[]): list of r coordinates of cylindrical obstacles (m)
-///     obstacles/r (double): radius of cylindrical obstacles (m)
-///     arena_x_length : X length of rectangular arena (m)
-///     arena_y_length : Y length of rectangular arena (m)
+///      \param rate (double): rate at which the control loop runs
+///      \param velocity (double): angular velocity of the turtle
+///      \param radius (double): radius of the circle
+///      \param wheel_radius (double): radius of the wheel
+///      \param track_width (double): width of the track
 /// PUBLISHES:
-///     ~/timestep (std_msgs::msg::Uint64): current timestep of simulation
-///     ~/obstacles (visualization_msgs::msg::MarkerArray): marker objects representing cylinders
-///     ~/walls (visualization_msgs::msg::MarkerArray): marker objects representing walls of arena
-/// SERVERS:
-///     ~/reset (std_srvs::srv::Empty): resets the simulation to the initial state
-///     ~/teleport (nusim::srv::Teleport): teleports the turtle to a given x, y, theta value
+///      \param cmd_vel (geometry_msgs::msg::Twist): velocity command to the turtle
+/// SERVICES:
+///      \param control (nusim::srv::Control): sets the angular velocity and radius of the turtle
+///      \param stop (std_srvs::srv::Empty): stops the turtle
+///      \param reverse (std_srvs::srv::Empty): reverses the turtle
 /// CLIENTS:
 ///     none
 /// BROADCASTS:
@@ -48,9 +48,7 @@
 using namespace std::chrono_literals;
 using namespace turtlelib;
 
-/* This example creates a subclass of Node and uses std::bind() to register a
-* member function as a callback from the timer. */
-
+/// @brief class to control the turtle to move in a circle
 class Circle: public rclcpp::Node
 {
 public:
@@ -116,6 +114,9 @@ private:
     }
 
     void reverse(std::shared_ptr<std_srvs::srv::Empty::Request> request, std::shared_ptr<std_srvs::srv::Empty::Response> response){
+        (void)request; // Mark as unused
+        (void)response; // Mark as unused
+
         if(velocity !=0 && radius != 0){
           ifstop = false;
           command.linear.x = -velocity*radius; /// the linear velocity is changed to the opposite direction based on angular velocity
@@ -125,6 +126,8 @@ private:
 
     
     void stop(std::shared_ptr<std_srvs::srv::Empty::Request> request, std::shared_ptr<std_srvs::srv::Empty::Response> response){
+        (void)request; // Mark as unused
+        (void)response; // Mark as unused
         ifstop = true; ///QUESTIONS
         command.linear.x = 0.0;
         command.angular.z = 0.0;
@@ -145,7 +148,10 @@ private:
     turtlelib::DiffDrive robot;
 };
 
-
+/// @brief main function to create and run the node
+/// @param argc 
+/// @param argv 
+/// @return 
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);

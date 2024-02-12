@@ -24,6 +24,7 @@ namespace turtlelib
     /// \brief draw the circle
     /// \param os - the os stream
     /// \param pt - the point of center of circle
+    /// \param t -the transformation you wanna apply on the circle
     /// \param stroke -the color of the stroke
     /// \return nothing
     void drawCircle(std::ostream & os, Point2D pt, Transform2D t, std::string stroke);
@@ -32,6 +33,7 @@ namespace turtlelib
     /// \param os - the os stream
     /// \param v1 - the vector head
     /// \param v2 - the vector tail
+    /// \param t -the transformation you wanna apply on the vector
     /// \param stroke -the color of the stroke
     /// \return nothing
     void drawVector(std::ostream & os, Vector2D v1, Vector2D v2, Transform2D t, std::string stroke);
@@ -40,7 +42,7 @@ namespace turtlelib
     /// \brief draw the vector
     /// \param os - the os stream
     /// \param t -the transformation you wanna apply on the vector
-    /// \param stroke -the color of the stroke
+    /// \param text -the text you wanna write
     /// \return nothing
     void groupTag(std::ostream & os, Transform2D t, std::string text);
 

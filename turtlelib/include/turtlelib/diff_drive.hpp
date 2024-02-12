@@ -11,7 +11,7 @@
 
 
 namespace turtlelib
-{   
+{   /// \brief struct to store wheel state
     struct WheelState{
         /// @brief left wheel state, in radians
         double l = 0.0;
@@ -19,12 +19,13 @@ namespace turtlelib
         double r = 0.0;
     };
 
+    /// @brief class to model the kinematics of a differential drive robot
     class DiffDrive{
     private:
-        /// @brief current configuration of robot in real world
-        Transform2D q;
         /// @brief wheel status on right and left side
         WheelState w;
+        /// @brief current configuration of robot in real world
+        Transform2D q;
         /// @brief wheel radius
         double wheel_radius;
         /// @brief width between two wheels
@@ -70,8 +71,12 @@ namespace turtlelib
         /// @return wheel velocity
         WheelState inverseKinematics(Twist2D twist);
 
+        /// @brief set radius of wheel
+        /// @param radius
         void set_radius(double radius);
 
+        /// @brief set track width
+        /// @param width
         void set_track_width(double width);
         
     }; 

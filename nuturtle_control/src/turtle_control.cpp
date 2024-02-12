@@ -1,24 +1,27 @@
+/// \file turtle_control.cpp
+/// \brief Publishes wheel commands and joint states of the robot
+/// \brief Subscribes to twist and calculates wheel commands.
+/// \brief Subscribes to sensor data and calculates joint states.
+///
 /// PARAMETERS:
-///     rate (double): frequency of the timer, in Hz
-///     x0 (double): starting x location of the turtlebot (m)
-///     y0 (double): starting y location of the turtlebot (m)
-///     theta0 (double): starting theta location of the turtlebot (rad)
-///     obstacles/x (double[]): list of x coordinates of cylindrical obstacles (m)
-///     obstacles/y (double[]): list of r coordinates of cylindrical obstacles (m)
-///     obstacles/r (double): radius of cylindrical obstacles (m)
-///     arena_x_length : X length of rectangular arena (m)
-///     arena_y_length : Y length of rectangular arena (m)
+///     wheel_radius (double): radius of the wheel
+///     track_width (double): width of the track
+///     motor_cmd_max (double): maximum motor command
+///     motor_cmd_per_rad_sec (double): motor command per radian per second
+///     encoder_ticks_per_rad (double): encoder ticks per radian
+///     collision_radius (double): radius of the collision
+/// SUBSCRIBES:
+///     ~/cmd_vel (geometry_msgs::msg::Twist): velocity command
+///     ~/sensor_data (nuturtlebot_msgs::msg::SensorData): sensor data
 /// PUBLISHES:
-///     ~/timestep (std_msgs::msg::Uint64): current timestep of simulation
-///     ~/obstacles (visualization_msgs::msg::MarkerArray): marker objects representing cylinders
-///     ~/walls (visualization_msgs::msg::MarkerArray): marker objects representing walls of arena
-/// SERVERS:
-///     ~/reset (std_srvs::srv::Empty): resets the simulation to the initial state
-///     ~/teleport (nusim::srv::Teleport): teleports the turtle to a given x, y, theta value
+///     ~/wheel_cmd (nuturtlebot_msgs::msg::WheelCommands): wheel commands
+///     ~/joint_states (sensor_msgs::msg::JointState): joint states
+/// SERVICES:
+///     none
 /// CLIENTS:
 ///     none
 /// BROADCASTS:
-///    nusim/world -> red/base_footprint
+///     none
 
 
 #include <chrono>
@@ -42,9 +45,7 @@
 
 using namespace std::chrono_literals;
 
-/* This example creates a subclass of Node and uses std::bind() to register a
-* member function as a callback from the timer. */
-
+/// @brief class to control the turtle
 class TurtleControl : public rclcpp::Node
 {
 public:
@@ -109,14 +110,10 @@ private:
 
     void cmd_vel_callback(const geometry_msgs::msg::Twist & msg) 
     {   turtlelib::Twist2D twist{msg.angular.z, msg.linear.x, 0.0};
-        // RCLCPP_INFO_STREAM(rclcpp::get_logger("turtle_control_test"), "???twist received"<<  msg.angular.z << " " << msg.linear.x);
-        //omega, x, y
-        // twist.omega = msg.angular.z;
-        // twist.x = msg.linear.x;
 
-        ///transfer radians to motor cmd using motor_cmd_per_rad_sec
+
         turtlelib::WheelState ws = robot.inverseKinematics(twist);
-        // RCLCPP_INFO_STREAM(this->get_logger(), "WheelState as "<< ws.l << " "<< ws.r);
+
 
         double left_velocity = ws.l / motor_cmd_per_rad_sec;
         double right_velocity = ws.r / motor_cmd_per_rad_sec;
@@ -137,14 +134,10 @@ private:
         wheel_cmd.right_velocity = static_cast<int>(right_velocity);
         wheel_cmd_publisher_->publish(wheel_cmd);
 
-        // RCLCPP_INFO_STREAM(this->get_logger(), "I heard cmd vel as (x, w): "<< msg.linear.x << " "<< msg.angular.z);
-        // RCLCPP_INFO_STREAM(this->get_logger(), "control node publish wheel cmd as "<< left_velocity << " "<< right_velocity);
     }
 
     void sensor_callback(const nuturtlebot_msgs::msg::SensorData & msg) 
         {
-        ///NEED IMPLEMENTATION
-        // RCLCPP_INFO(this->get_logger(), "I heard sensor data as (left, right): '%d %d'", msg.left_encoder, msg.right_encoder);
         double left_encoder = msg.left_encoder;
         double right_encoder = msg.right_encoder;
 
@@ -193,7 +186,10 @@ private:
 
 };
 
-
+/// @brief main function to start the node
+/// @param argc
+/// @param argv
+/// @return int
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);

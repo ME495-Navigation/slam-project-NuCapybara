@@ -1,23 +1,26 @@
+/// \file odometry.cpp
+/// \brief Publish odom and tf messages of the robot by subscribing to joint states
+///
 /// PARAMETERS:
-///     rate (double): frequency of the timer, in Hz
-///     x0 (double): starting x location of the turtlebot (m)
-///     y0 (double): starting y location of the turtlebot (m)
-///     theta0 (double): starting theta location of the turtlebot (rad)
-///     obstacles/x (double[]): list of x coordinates of cylindrical obstacles (m)
-///     obstacles/y (double[]): list of r coordinates of cylindrical obstacles (m)
-///     obstacles/r (double): radius of cylindrical obstacles (m)
-///     arena_x_length : X length of rectangular arena (m)
-///     arena_y_length : Y length of rectangular arena (m)
-/// PUBLISHES:
-///     ~/timestep (std_msgs::msg::Uint64): current timestep of simulation
-///     ~/obstacles (visualization_msgs::msg::MarkerArray): marker objects representing cylinders
-///     ~/walls (visualization_msgs::msg::MarkerArray): marker objects representing walls of arena
-/// SERVERS:
+///    \param body_id (string): body id of the robot
+///    \param odom_id (string): odometry id of the robot
+///    \param rate (double): rate at which the control loop runs
+///    \param velocity (double): angular velocity of the turtle
+///    \param radius (double): radius of the circle
+///    \param wheel_radius (double): radius of the wheel
+///    \param track_width (double): width of the track
 
+/// PUBLISHES:
+///     \param odom (nav_msgs::msg::Odometry): odometry of the turtle
+///     \param TransformBroadcaster (tf2_ros::TransformBroadcaster): broadcast transform of the robot
+/// SERVICES:
+///     \param initial_pose (nuturtle_control::srv::InitialPose): sets the initial pose of the turtle
+/// SUBSCRIBES:
+///     \param joint_states (sensor_msgs::msg::JointState): joint states of the turtle
 /// CLIENTS:
 ///     none
 /// BROADCASTS:
-///   odom -> blue/base_footprint
+///   \param braodcaster odom -> blue/base_footprint
 
 
 #include <chrono>
@@ -47,11 +50,14 @@
 #include "geometry_msgs/msg/transform_stamped.hpp"
 
 using namespace std::chrono_literals;
-using namespace turtlelib;
 
-/* This example creates a subclass of Node and uses std::bind() to register a
-* member function as a callback from the timer. */
-
+/// \brief subscribes to joint states and publishes odometry of the robot
+/// \param body_id - body id of the robot
+/// \param odom_id - odometry id of the robot
+/// \param wheel_left - left wheel joint name
+/// \param wheel_right - right wheel joint name
+/// \param wheel_radius - radius of the wheels[m]
+/// \param track_width - distance between the wheels[m]
 class Odometry: public rclcpp::Node
 {
 public:
@@ -63,14 +69,12 @@ public:
     ///parameter delcaration
     declare_parameter("body_id", body_id);
     body_id = get_parameter("body_id").as_string();
-    // RCLCPP_INFO_STREAM(get_logger(), "BODY ID: " << body_id);
     if(body_id.empty()){
         RCLCPP_DEBUG_STREAM(get_logger(), "BodyID not specified" << 4);
     }
     
     declare_parameter("odom_id", odom_id);
     odom_id = get_parameter("odom_id").as_string();
-    // RCLCPP_INFO_STREAM(get_logger(), "Odom ID: " << odom_id);
 
     declare_parameter("wheel_left", wheel_left);
     wheel_left = get_parameter("wheel_left").as_string();
@@ -101,10 +105,7 @@ public:
     odom.child_frame_id = body_id;
     transformStamped.header.frame_id = odom_id;
     transformStamped.child_frame_id = body_id;  
-    //redefine the robot wheel_radius
     robot = turtlelib::DiffDrive(wheel_radius, track_width);
-    // RCLCPP_INFO_STREAM(get_logger(), "WHEEL RADIUS: " << robot.get_radius()<< " TRACK WIDTH: " << robot.get_track_width());
-    /// joint state subscriber and odom publisher
     joint_state_subscription_ = create_subscription<sensor_msgs::msg::JointState>(
       "joint_states", 10, std::bind(&Odometry::js_callback, this, std::placeholders::_1));
     odom_publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
@@ -146,15 +147,7 @@ private:
             }
 
             if (left_index != -1 && right_index != -1)  
-            {   // calculating the index 
-                // RCLCPP_INFO_STREAM(get_logger(), "***********ELSE IF!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
-                // RCLCPP_INFO_STREAM(get_logger(), "js_l" << joint_position_list[left_index] << " js_r" << joint_position_list[right_index]);
-                // double left_wheel_angle = joint_position_list[left_index];
-                // double right_wheel_angle = joint_position_list[right_index];
-
-                // double left_wheel_velocity = joint_velocity_list[left_index];
-                // double right_wheel_velocity = joint_velocity_list[right_index];
-
+            {
                 const auto dl = joint_position_list.at(left_index) - last_joint_state.position.at(left_index);
                 const auto dr = joint_position_list.at(right_index) - last_joint_state.position.at(right_index);
                 const auto currTime = js.header.stamp.sec  + 1e-9 * js.header.stamp.nanosec;
@@ -166,10 +159,7 @@ private:
                 const auto prev_phi = robot.get_current_config().rotation();
 
                 // update robot config and everything
-                // RCLCPP_INFO_STREAM(get_logger(), "FORWARD KINEMATICS BEFORE!!!" << robot.get_current_config());
                 robot.forwardKinematics(turtlelib::WheelState{dl, dr});
-                // RCLCPP_INFO_STREAM(get_logger(), "dl" << dl << " dr" << dr << " dt" << dt);
-                // RCLCPP_INFO_STREAM(get_logger(), "FORWARD KINEMATICS AFTER!!!" << robot.get_current_config());
 
                 ///ODOM POSE PART
                 ///define odom pose/pose
@@ -188,16 +178,14 @@ private:
                 ///define odom twist/twist
                 odom.twist.twist.linear.x = (robot.get_current_config().translation().x - prev_x) / dt;
                 odom.twist.twist.linear.y = (robot.get_current_config().translation().y - prev_y) / dt;
-                odom.twist.twist.angular.z = normalize_angle((robot.get_current_config().rotation() - prev_phi) / dt);
+                odom.twist.twist.angular.z = turtlelib::normalize_angle((robot.get_current_config().rotation() - prev_phi) / dt);
 
 
 
                 ///publish odom
                 odom_publisher_->publish(odom);
-
-                ///TF BROADCAST
-                
-                // RCLCPP_INFO_STREAM(get_logger(), "!!!!!!!!!?????? " << transformStamped.header.frame_id << " " << transformStamped.child_frame_id);
+               
+               ///TF PART
                 transformStamped.header.stamp = get_clock()->now();
                 transformStamped.transform.translation.x = robot.get_current_config().translation().x;
 
@@ -209,6 +197,7 @@ private:
                 br->sendTransform(transformStamped);
             }
             else{
+                ///JOINT STATE ERROR
                 RCLCPP_DEBUG_STREAM(get_logger(), "Wheel ID not found" << 4);
             } 
         }
@@ -239,7 +228,10 @@ private:
     bool first = true;
 };
 
-
+/// \brief main function to create and run Odometry node
+/// \param argc
+/// \param argv
+/// \return int
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);

@@ -19,8 +19,6 @@
 ///     none
 /// BROADCASTS:
 ///    nusim/world -> red/base_footprint
-
-
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -42,6 +40,7 @@
 #include "turtlelib/se2d.hpp"
 #include "turtlelib/diff_drive.hpp"
 #include "turtlelib/geometry2d.hpp"
+#include "nav_msgs/msg/path.hpp"
 
 using namespace std::chrono_literals;
 
@@ -131,11 +130,15 @@ public:
     sensor_data_pub = this->create_publisher<nuturtlebot_msgs::msg::SensorData>(
       "red/sensor_data",
       10);
-    //wall publisher
+      
+    path_pub = create_publisher<nav_msgs::msg::Path>("red/path", 10);
     
+    
+    //wall publisher
     rclcpp::QoS qos_policy = rclcpp::QoS(rclcpp::KeepLast(10)).transient_local();
     wall_pub = create_publisher<visualization_msgs::msg::MarkerArray>("~/walls", qos_policy);
     obs_pub = create_publisher<visualization_msgs::msg::MarkerArray>("~/obstacles", qos_policy);
+    
   }
 
 private:
@@ -333,12 +336,14 @@ private:
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr obs_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr wall_pub;
   rclcpp::Publisher<nuturtlebot_msgs::msg::SensorData>::SharedPtr sensor_data_pub;
+  rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub;
   rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset_;
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   rclcpp::Service<nusim::srv::Teleport>::SharedPtr teleport_;
   rclcpp::Subscription<nuturtlebot_msgs::msg::WheelCommands>::SharedPtr wheel_subscriber_;
   turtlelib::DiffDrive robot{0.033, 0.16};
   nuturtlebot_msgs::msg::SensorData sensor_data;
+
 };
 
 

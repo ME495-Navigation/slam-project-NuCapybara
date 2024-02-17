@@ -70,6 +70,8 @@
         </node>
 
         <node pkg="numsr_turtlebot" exec="numsr_turtlebot"/>
+        <!-- Task F.6 -->
+        <node pkg="hls_lfcd_lds_driver" exec="hlds_laser_publisher"/>
 
 
         <!-- <node pkg="numsr_turtlebot" exec="numsr_turtlebot" name="numsr_turtlebot"/> -->
@@ -95,5 +97,6 @@
 
     <!-- publish transform between nusim/world and odom frame -->
     <node pkg="tf2_ros" exec="static_transform_publisher" args="0 0 0 0 0 0 nusim/world odom"/>
+
 
 </launch>

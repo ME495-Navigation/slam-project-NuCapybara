@@ -48,6 +48,7 @@
 #include "geometry_msgs/msg/point.hpp"
 #include "nuturtle_control/srv/initial_pose.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
+#include "nav_msgs/msg/path.hpp"
 
 using namespace std::chrono_literals;
 
@@ -109,6 +110,7 @@ public:
     joint_state_subscription_ = create_subscription<sensor_msgs::msg::JointState>(
       "joint_states", 10, std::bind(&Odometry::js_callback, this, std::placeholders::_1));
     odom_publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
+    path_pub_blue = create_publisher<nav_msgs::msg::Path>("blue/path", 10);
 
 
     br = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
@@ -195,6 +197,23 @@ private:
                 transformStamped.transform.rotation.z = q.z();
                 transformStamped.transform.rotation.w = q.w();
                 br->sendTransform(transformStamped);
+
+                ///Path publishing on blue robot
+                robot_path.header.stamp = get_clock()->now();
+                robot_path.header.frame_id = odom_id;
+                ///initialize the pose inside of the path
+                geometry_msgs::msg::PoseStamped path_pose;
+                path_pose.header.stamp = get_clock()->now();
+                path_pose.header.frame_id = odom_id;
+                path_pose.pose.position.x = robot.get_current_config().translation().x;
+                path_pose.pose.position.y = robot.get_current_config().translation().y;
+                path_pose.pose.orientation.x = q.x();
+                path_pose.pose.orientation.y = q.y();
+                path_pose.pose.orientation.z = q.z();
+                path_pose.pose.orientation.w = q.w();
+                robot_path.poses.push_back(path_pose);
+                path_pub_blue->publish(robot_path);
+
             }
             else{
                 ///JOINT STATE ERROR
@@ -220,6 +239,8 @@ private:
     sensor_msgs::msg::JointState last_joint_state;
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_subscription_;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_blue;
+    nav_msgs::msg::Path robot_path;
     rclcpp::Service<nuturtle_control::srv::InitialPose>::SharedPtr initial_pose_;
     turtlelib::DiffDrive robot;
     nav_msgs::msg::Odometry odom;

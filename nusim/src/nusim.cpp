@@ -168,7 +168,6 @@ private:
     auto new_right_angle = delta_right_angle + robot.get_wheel_state().r;
     auto new_left_angle = delta_left_angle + robot.get_wheel_state().l;
     ///use delta wheel degree to update wheel state
-    RCLCPP_INFO_STREAM(get_logger(), "left=" << delta_left_angle << " right=" << delta_right_angle);
     robot.forwardKinematics(turtlelib::WheelState{delta_left_angle, delta_right_angle});
 
     x = robot.get_current_config().translation().x;

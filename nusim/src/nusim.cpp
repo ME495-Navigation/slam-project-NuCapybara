@@ -12,6 +12,7 @@
 ///     ~/timestep (std_msgs::msg::Uint64): current timestep of simulation
 ///     ~/obstacles (visualization_msgs::msg::MarkerArray): marker objects representing cylinders
 ///     ~/walls (visualization_msgs::msg::MarkerArray): marker objects representing walls of arena
+///     ~/red/path (nav_msgs::msg::Path): path of the turtlebot
 /// SERVERS:
 ///     ~/reset (std_srvs::srv::Empty): resets the simulation to the initial state
 ///     ~/teleport (nusim::srv::Teleport): teleports the turtle to a given x, y, theta value
@@ -181,6 +182,10 @@ private:
     sensor_data.stamp = get_clock()->now();
     sensor_data_pub->publish(sensor_data);
 
+    //publish the nav_msgs::msg::Path
+    red_path.header.frame_id = "nusim/world";
+    red_path.header.stamp = get_clock()->now();
+    path_pub->publish(red_path);
   }
 
 
@@ -197,6 +202,7 @@ private:
   }
 
   //broadcast the location by giving x y w
+  //also update the robot path with x y w
   void send_transform(double x, double y, double w)
   {
     geometry_msgs::msg::TransformStamped t;
@@ -214,6 +220,21 @@ private:
     t.transform.rotation.w = q.w();
     // Send the transformation
     tf_broadcaster_->sendTransform(t);
+
+    //update the robot path
+    robot_pose.header.frame_id = "nusim/world";
+    robot_pose.header.stamp = get_clock()->now();
+    robot_pose.pose.position.x = x;
+    robot_pose.pose.position.y = y;
+    robot_pose.pose.position.z = 0.0;
+    robot_pose.pose.orientation.x = q.x();
+    robot_pose.pose.orientation.y = q.y();
+    robot_pose.pose.orientation.z = q.z();
+    robot_pose.pose.orientation.w = q.w();
+    // RCLCPP_INFO_STREAM(
+      // get_logger(), "Send path pose as x=" << x << " y=" << y << " theta=" << w);
+    red_path.poses.push_back(robot_pose);
+
   }
 
   void teleport(
@@ -330,7 +351,7 @@ private:
   size_t cyl_num;
   double left_velocity=0.0; //rad/s
   double right_velocity=0.0;
-
+  nav_msgs::msg::Path red_path; //the path of the robot
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<std_msgs::msg::UInt64>::SharedPtr time_step_publisher_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr obs_pub;
@@ -343,6 +364,7 @@ private:
   rclcpp::Subscription<nuturtlebot_msgs::msg::WheelCommands>::SharedPtr wheel_subscriber_;
   turtlelib::DiffDrive robot{0.033, 0.16};
   nuturtlebot_msgs::msg::SensorData sensor_data;
+  geometry_msgs::msg::PoseStamped robot_pose = geometry_msgs::msg::PoseStamped();
 
 };
 

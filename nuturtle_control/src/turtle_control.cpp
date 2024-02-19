@@ -114,7 +114,7 @@ private:
 
         turtlelib::WheelState ws = robot.inverseKinematics(twist);
 
-
+        // const auto
         double left_velocity = ws.l / motor_cmd_per_rad_sec;
         double right_velocity = ws.r / motor_cmd_per_rad_sec;
         if(left_velocity > motor_cmd_max){
@@ -137,8 +137,8 @@ private:
     }
 
     void sensor_callback(const nuturtlebot_msgs::msg::SensorData & msg) 
-        {
-        double left_encoder = msg.left_encoder;
+    { // indentation
+            double left_encoder = msg.left_encoder; // cons tauto
         double right_encoder = msg.right_encoder;
 
         left_wheel_joint = static_cast<double> (left_encoder) / encoder_ticks_per_rad;
@@ -160,6 +160,7 @@ private:
 
             joint_state.position = {left_wheel_joint, right_wheel_joint};
 
+            // const auto
             double left_wheel_velocity =(left_wheel_joint - joint_state.position.at(0)) / del_t;
             double right_wheel_velocity = (right_wheel_joint - joint_state.position.at(1)) / del_t;
 

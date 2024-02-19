@@ -48,19 +48,19 @@ namespace turtlelib
 
         /// @brief get radius of wheel
         /// @return double
-        double get_radius();
+        double get_radius(); // const
 
         /// @brief get track width
         /// @return double
-        double get_track_width();
+        double get_track_width(); //const
         
         /// @brief get current wheel state
         /// @return WheelState 
-        WheelState get_wheel_state();
+        WheelState get_wheel_state(); // const
 
         /// @brief get current configuration q of robot in real world
         /// @return current configuration Transform2D
-        Transform2D get_current_config();
+        Transform2D get_current_config(); // const
 
         /// @brief  Given new wheel positions, update the configuration
         /// @param newWheelState 

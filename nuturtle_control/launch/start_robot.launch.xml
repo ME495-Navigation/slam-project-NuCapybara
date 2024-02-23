@@ -71,7 +71,10 @@
 
         <node pkg="numsr_turtlebot" exec="numsr_turtlebot"/>
         <!-- Task F.6 -->
-        <node pkg="hls_lfcd_lds_driver" exec="hlds_laser_publisher"/>
+        <include file="$(find-pkg-share hls_lfcd_lds_driver)/launch/hlds_laser.launch.py">
+            <arg name="frame_id" value="blue/base_scan"/>
+            <arg name="port" value="/dev/ttyUSB0"/>
+        </include>
 
 
         <!-- <node pkg="numsr_turtlebot" exec="numsr_turtlebot" name="numsr_turtlebot"/> -->
@@ -83,18 +86,23 @@
         launch-prefix="xterm -e" >
     </node>
 
-    <node name="rviz2" pkg="rviz2" exec="rviz2" args="-d $(find-pkg-share nuturtle_control)/config/blue.rviz" 
-        if="$(eval '\'$(var use_rviz)\' == \'true\' and \'$(var robot)\' != \'localhost\' and \'$(var robot)\' != \'nusim\' ')" > 
-    </node>
 
-
-    <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py"
-    if="$(eval '\'$(var use_rviz)\' == \'true\' and \'$(var robot)\' != \'localhost\' and \'$(var robot)\' != \'nusim\' ')" >
-        <arg name="color" value="blue" />
-        <arg name="use_rviz" value="false" />
-        <arg name="use_jsp" value="false" />
-    </include>
-
+    <!-- None Group -->
+    <group if="$(eval '\'$(var robot)\' == \'none\'')">
+        <node name="rviz2" pkg="rviz2" exec="rviz2" args="-d $(find-pkg-share nuturtle_control)/config/blue.rviz" 
+        if="$(eval '\'$(var use_rviz)\' == \'true\'')" > 
+        </node>
+        <include file="$(find-pkg-share nuturtle_description)/load_one.launch.py">
+            <arg name="color" value="blue" />
+            <arg name="use_rviz" value="false" />
+            <arg name="use_jsp" value="false" />
+        </include>
+        <node pkg="nusim" exec="nusim" name="nuwall">
+            <param from="$(find-pkg-share nuturtle_description)/diff_params.yaml" />
+            <param from="$(find-pkg-share nusim)/config/basic_world.yaml" />
+            <param name="draw_only" value="true"/>
+        </node>
+    </group>
     <!-- publish transform between nusim/world and odom frame -->
     <node pkg="tf2_ros" exec="static_transform_publisher" args="0 0 0 0 0 0 nusim/world odom"/>
 

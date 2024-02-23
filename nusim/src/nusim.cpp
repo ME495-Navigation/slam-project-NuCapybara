@@ -204,12 +204,22 @@ private:
 
       ///use delta wheel degree to update wheel state
       robot.forwardKinematics(turtlelib::WheelState{delta_left_angle, delta_right_angle});
-
-      x = robot.get_current_config().translation().x;
-      y = robot.get_current_config().translation().y;
-      theta = robot.get_current_config().rotation();
-
-      send_transform(x, y, theta);
+      // x = robot.get_current_config().translation().x;
+      // y = robot.get_current_config().translation().y;
+      // theta = robot.get_current_config().rotation();
+      // send_transform(x, y, theta);
+      ///if no collision, update the robot's location
+      if(!collide){
+        ///get the robot's new location, 
+        x = robot.get_current_config().translation().x;
+        y = robot.get_current_config().translation().y;
+        theta = robot.get_current_config().rotation();
+        send_transform(x, y, theta);
+      }
+      else{
+        send_transform(x, y, theta);
+      }
+      
       //update the sensor call back
       sensor_data.left_encoder = static_cast<int>(new_left_angle*encoder_ticks_per_rad);
       sensor_data.right_encoder = static_cast<int>(new_right_angle*encoder_ticks_per_rad);
@@ -411,22 +421,30 @@ private:
         m.scale.z = 0.25;
         const turtlelib::Transform2D column_location{turtlelib::Vector2D {this->obx[i], this->oby[i]}, 0};
         RCLCPP_INFO_STREAM(get_logger(), "COLUMN LOCATION TRC as" << column_location.translation().x << " " << column_location.translation().y << " " << column_location.rotation());
-        const auto robot_cur_location = robot.get_current_config(); ///also a Transform2D
+        // const auto robot_cur_location = robot.get_current_config(); ///also a Transform2D
+        const turtlelib::Transform2D robot_cur_location{turtlelib::Vector2D{x, y}, theta};  /// x, y, theta represents the red robot's current location
+        RCLCPP_INFO_STREAM(get_logger(), "ROBOT CUR LOCATION TRC as" << robot_cur_location.translation().x << " " << robot_cur_location.translation().y << " " << robot_cur_location.rotation());
         ///return a vector of the translation, Trc = Trs * Tsc = Tsr.inv() * Tsc
         const auto Trc_location = (robot_cur_location.inv() * column_location).translation();
         m.pose.position.x = Trc_location.x + obs_noise;
         m.pose.position.y = Trc_location.y + obs_noise;
         m.pose.position.z = 0.125;
         RCLCPP_INFO_STREAM(get_logger(), "new obstacle added");
+
+        ///updating if the robot is colliding the obstacle
+        if(if_collide(i)){
+          collide = true;
+        }
       }
       else{
         m.action = visualization_msgs::msg::Marker::DELETE;
         
         RCLCPP_INFO_STREAM(get_logger(), "delete the obstacle marker!");
-      }
+        }
       arr_fake_sensor_obstacle.markers.push_back(m);
     }
     fake_sensor_cyl_pub->publish(arr_fake_sensor_obstacle);
+  
   }
 
   void wheel_callback(const nuturtlebot_msgs::msg::WheelCommands & wc)
@@ -461,6 +479,23 @@ private:
     slip_noise = u(get_random());
   }
 
+  /// @brief  return true if the robot is collidig the obstacle, false if not
+  /// @param i the index of the obstacle
+  /// @return bool
+  bool if_collide(int i){
+    double cyl_x = obx[i];
+    double cyl_y = oby[i];
+    auto robot_x = robot.get_current_config().translation().x;
+    auto robot_y = robot.get_current_config().translation().y;
+    auto dist = std::sqrt(std::pow(cyl_x - robot_x, 2) + std::pow(cyl_y - robot_y, 2));
+    if((dist - obr - collision_radius) > 0){
+      return false;
+    }
+    else{
+      return true;
+    }
+  }
+  ///return true if the obstacle is inside the range of the fake sensor, false if out of range
   bool dist_obs_robot(int i, double range){
     double cyl_x = obx[i];
     double cyl_y = oby[i];
@@ -468,14 +503,14 @@ private:
     auto robot_y = robot.get_current_config().translation().y;
     auto dist = std::sqrt(std::pow(cyl_x - robot_x, 2) + std::pow(cyl_y - robot_y, 2));
     if((range == 0) && ((dist - obr - collision_radius) < range)){
-      RCLCPP_INFO_STREAM(get_logger(), "return true, situation 1, the distance is inside range" << (dist - obr - collision_radius));
+      // RCLCPP_INFO_STREAM(get_logger(), "return true, situation 1, the distance is inside range" << (dist - obr - collision_radius));
       return true;
     }
     else if((dist - obr - collision_radius) < range){
-      RCLCPP_INFO_STREAM(get_logger(), "return true, the distance is inside range" << (dist - obr - collision_radius));
+      // RCLCPP_INFO_STREAM(get_logger(), "return true, the distance is inside range" << (dist - obr - collision_radius));
       return true;
     }
-    RCLCPP_INFO_STREAM(get_logger(), "return false" << (dist - obr - collision_radius));
+    // RCLCPP_INFO_STREAM(get_logger(), "return false" << (dist - obr - collision_radius));
     return false;
     
   }
@@ -515,6 +550,7 @@ private:
   double gaussian_noise_velocity = 0.0;
   double slip_noise = 0.0;
   double range = 3.0; //maximum range of the fake sensor to detect the obstacle
+  bool collide = false;
 
 };
 

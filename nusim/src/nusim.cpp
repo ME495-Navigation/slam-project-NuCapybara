@@ -41,7 +41,9 @@
 #include "turtlelib/se2d.hpp"
 #include "turtlelib/diff_drive.hpp"
 #include "turtlelib/geometry2d.hpp"
+#include "turtlelib/lidar.hpp"
 #include "nav_msgs/msg/path.hpp"
+#include "sensor_msgs/msg/laser_scan.hpp"
 #include <random>
 
 using namespace std::chrono_literals;
@@ -108,6 +110,29 @@ public:
     if(encoder_ticks_per_rad == 0 || encoder_ticks_per_rad < 0){
         RCLCPP_DEBUG_STREAM(get_logger(), "encoder_ticks_per_rad error" << 4);
     }
+    ///LIDAR PARAMETERS
+    // lidar_angle_increment_
+    declare_parameter("lidar_angle_increment_", 0.0174533);
+    lidar_angle_increment_ = get_parameter("lidar_angle_increment_").as_double();
+
+    // lidar_max_detect_range QUESTION: CHANGE RANGE PARAMETER LATER!!!!!!!
+    declare_parameter("lidar_max_range_", 3.0);
+    lidar_max_range_ = get_parameter("lidar_max_range_").as_double();
+
+    declare_parameter("lidar_min_range_", 0.12);
+    lidar_min_range_ = get_parameter("lidar_min_range_").as_double();
+    ///QUESTION HOW WE GONNA USE THIS PARAMETER??? 5 scans per second
+    declare_parameter("lidar_num_samples_", 0);
+    lidar_num_samples_ = get_parameter("lidar_num_samples_").as_int();
+    ///QUESTION resolution corresponding to angle increament???
+    declare_parameter("resolution", 0.0174533);
+    resolution = get_parameter("resolution").as_double();
+
+    declare_parameter("noise_level", 0.0);
+    noise_level = get_parameter("noise_level").as_double();
+
+
+
 
     declare_parameter("draw_only", false);
     draw_only = get_parameter("draw_only").as_bool();
@@ -169,6 +194,8 @@ public:
     obs_pub = create_publisher<visualization_msgs::msg::MarkerArray>("~/obstacles", qos_policy);
     fake_sensor_cyl_pub = create_publisher<visualization_msgs::msg::MarkerArray>("~/fake_sensor", qos_policy);
     
+    //laser publisher
+    laser_pub = create_publisher<sensor_msgs::msg::LaserScan>("~/scan", 10);
   }
 
 private:
@@ -238,6 +265,7 @@ private:
     //publish the sensor data on fake obstacles
     if(!draw_only){
       fake_sensor_cyl_publisher();
+      laser_scan();
       // RCLCPP_INFO_STREAM(get_logger(), "Fake sensor publishing");
     }
 
@@ -394,10 +422,10 @@ private:
       return;
     }
     visualization_msgs::msg::MarkerArray arr_fake_sensor_obstacle;
-    RCLCPP_INFO_STREAM(get_logger(), "I get into fake sensor publisher");
+    // RCLCPP_INFO_STREAM(get_logger(), "I get into fake sensor publisher");
     for (size_t i = 0; i < cyl_num; i++) {
       
-      RCLCPP_INFO_STREAM(get_logger(), "FOR LOOP TIME" << i);
+      // RCLCPP_INFO_STREAM(get_logger(), "FOR LOOP TIME" << i);
       visualization_msgs::msg::Marker m;
       m.header.stamp = this->get_clock()->now();
       m.header.frame_id = "red/base_footprint";
@@ -409,7 +437,7 @@ private:
         ///create gaussian noise on the obstacle location
         std::normal_distribution<double> d(0, basic_sensor_variance);
         auto obs_noise = d(get_random());
-        RCLCPP_INFO_STREAM(get_logger(), "obs_noise" << obs_noise);
+        // RCLCPP_INFO_STREAM(get_logger(), "obs_noise" << obs_noise);
 
         m.color.r = 1.0;
         m.color.g = 1.0;
@@ -420,16 +448,16 @@ private:
         m.scale.y = this->obr * 2 + obs_noise;
         m.scale.z = 0.25;
         const turtlelib::Transform2D column_location{turtlelib::Vector2D {this->obx[i], this->oby[i]}, 0};
-        RCLCPP_INFO_STREAM(get_logger(), "COLUMN LOCATION TRC as" << column_location.translation().x << " " << column_location.translation().y << " " << column_location.rotation());
+        // RCLCPP_INFO_STREAM(get_logger(), "COLUMN LOCATION TRC as" << column_location.translation().x << " " << column_location.translation().y << " " << column_location.rotation());
         // const auto robot_cur_location = robot.get_current_config(); ///also a Transform2D
         const turtlelib::Transform2D robot_cur_location{turtlelib::Vector2D{x, y}, theta};  /// x, y, theta represents the red robot's current location
-        RCLCPP_INFO_STREAM(get_logger(), "ROBOT CUR LOCATION TRC as" << robot_cur_location.translation().x << " " << robot_cur_location.translation().y << " " << robot_cur_location.rotation());
+        // RCLCPP_INFO_STREAM(get_logger(), "ROBOT CUR LOCATION TRC as" << robot_cur_location.translation().x << " " << robot_cur_location.translation().y << " " << robot_cur_location.rotation());
         ///return a vector of the translation, Trc = Trs * Tsc = Tsr.inv() * Tsc
         const auto Trc_location = (robot_cur_location.inv() * column_location).translation();
         m.pose.position.x = Trc_location.x + obs_noise;
         m.pose.position.y = Trc_location.y + obs_noise;
         m.pose.position.z = 0.125;
-        RCLCPP_INFO_STREAM(get_logger(), "new obstacle added");
+        // RCLCPP_INFO_STREAM(get_logger(), "new obstacle added");
 
         ///updating if the robot is colliding the obstacle
         if(if_collide(i)){
@@ -439,7 +467,7 @@ private:
       else{
         m.action = visualization_msgs::msg::Marker::DELETE;
         
-        RCLCPP_INFO_STREAM(get_logger(), "delete the obstacle marker!");
+        // RCLCPP_INFO_STREAM(get_logger(), "delete the obstacle marker!");
         }
       arr_fake_sensor_obstacle.markers.push_back(m);
     }
@@ -515,6 +543,59 @@ private:
     
   }
 
+  void laser_scan(){
+    ///calculate the lidar num samples
+    lidar_num_samples_ = static_cast<int> (turtlelib::deg2rad(360 - 0)/lidar_angle_increment_+1);///360
+    sensor_msgs::msg::LaserScan scan_msg;
+    scan_msg.header.frame_id = "red/base_scan";
+    scan_msg.header.stamp = get_clock()->now();
+    scan_msg.angle_min = 0.0;
+    scan_msg.angle_max = turtlelib::deg2rad(360.0); // convert degrees to radians
+    scan_msg.angle_increment = lidar_angle_increment_; // in radians
+    scan_msg.time_increment = 0.0;
+    scan_msg.scan_time = 1.0 / rate_fakesensor_hz;
+    scan_msg.range_min = lidar_min_range_;
+    scan_msg.range_max = lidar_max_range_;
+    scan_msg.ranges.resize(lidar_num_samples_);
+
+
+    for (int i = 0; i < lidar_num_samples_; i++) {
+      ///Solution 1: in robot frame
+      // const turtlelib::Transform2D column_location{turtlelib::Vector2D {this->obx[0], this->oby[0]}, 0};
+      // const turtlelib::Transform2D robot_cur_location{turtlelib::Vector2D{x, y}, theta};  /// x, y, theta represents the red robot's current location
+      // const auto Trc_location = (robot_cur_location.inv() * column_location).translation();
+      // turtlelib::Point2D obst_location{Trc_location.x, Trc_location.y};///remember to change!!!
+      // turtlelib::Point2D robot_location{0, 0};
+      // double angle = -(i * lidar_angle_increment_ - turtlelib::PI/2); 
+
+      ///Solution 2: in world frame
+
+    for(size_t column_index = 0; column_index < cyl_num; column_index++){
+      turtlelib::Point2D obst_location{obx[column_index], oby[column_index]};///remember to change!!!
+      turtlelib::Point2D robot_location{x, y}; ///x, y represents the red robot's current location
+      ///the way I wrote my function is not follow convention, so convert them into the real angle 
+      double angle = -(i * lidar_angle_increment_ + theta - turtlelib::PI/2); 
+      turtlelib::Point2D scan_point 
+      = turtlelib::intersectPoint(obst_location, robot_location, lidar_max_range_, angle, obr);
+
+      turtlelib::Point2D limit{
+                          x + lidar_max_range_ * cos(i*lidar_angle_increment_),
+                          y + lidar_max_range_ * sin(i*lidar_angle_increment_)
+                        };
+
+      if(scan_point.x < 10000 && scan_point.y < 10000){
+        if(scan_point.x/ (limit.x - x + 1e-7) > 0.0){
+          scan_msg.ranges.at(i) = turtlelib::magnitude(scan_point - robot_location);
+          RCLCPP_INFO_STREAM(get_logger(), "am currently at angle rad" << i);
+          RCLCPP_INFO_STREAM(get_logger(), "LIMIT" << limit.x << " " << limit.y << " " << "x" << x << "y" << y);
+          RCLCPP_INFO_STREAM(get_logger(), "scan_point" << scan_point.x << " " << scan_point.y << " " << turtlelib::rad2deg(angle));
+        }
+      }
+    }
+    }
+    
+    laser_pub->publish(scan_msg);
+  }
 
   double x_i, y_i, theta_i;
   double x, y, theta, rate_hz, encoder_ticks_per_rad, rate_fakesensor_hz;
@@ -537,6 +618,7 @@ private:
   rclcpp::Publisher<nuturtlebot_msgs::msg::SensorData>::SharedPtr sensor_data_pub;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr fake_sensor_cyl_pub;
+  rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr laser_pub;
   rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset_;
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   rclcpp::Service<nusim::srv::Teleport>::SharedPtr teleport_;
@@ -551,7 +633,8 @@ private:
   double slip_noise = 0.0;
   double range = 3.0; //maximum range of the fake sensor to detect the obstacle
   bool collide = false;
-
+  double lidar_angle_increment_, lidar_max_range_, lidar_min_range_, resolution, noise_level;
+  int lidar_num_samples_;
 };
 
 

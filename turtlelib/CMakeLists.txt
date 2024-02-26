@@ -18,6 +18,7 @@ add_library(turtlelib src/geometry2d.cpp
                       src/se2d.cpp 
                       src/svg.cpp
                       src/diff_drive.cpp
+                      src/lidar.cpp
                       )
 
 # Use target_include_directories so that #include"mylibrary/header.hpp" works

@@ -1,9 +1,11 @@
 #include "turtlelib/geometry2d.hpp"
+#include <turtlelib/lidar.hpp>
 #include <string>
 #include <sstream>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <cmath>
+#include <iostream>
 using namespace std;
 
 
@@ -144,7 +146,7 @@ TEST_CASE("operator>>", "Point2D)")
   REQUIRE(v5.y == -2.3);
 }
 
-TEST_CASE("operator +=", "Vector"){
+TEST_CASE("operator +=", "Vector") {
   Vector2D v1{2, 5};
   Vector2D v2{11, 15};
   v1 += v2;
@@ -152,7 +154,7 @@ TEST_CASE("operator +=", "Vector"){
   REQUIRE_THAT(v1.y, Catch::Matchers::WithinAbs(20.0, 1e-5));
 }
 
-TEST_CASE("operator +", "Vector"){
+TEST_CASE("operator +", "Vector") {
   Vector2D v1{2, 5};
   Vector2D v2{11, 15};
   Vector2D v3 = v1 + v2;
@@ -160,7 +162,7 @@ TEST_CASE("operator +", "Vector"){
   REQUIRE_THAT(v3.y, Catch::Matchers::WithinAbs(20.0, 1e-5));
 }
 
-TEST_CASE("operator -", "Vector"){
+TEST_CASE("operator -", "Vector") {
   Vector2D v1{2, 5};
   Vector2D v2{11, 15};
   Vector2D v3 = v1 - v2;
@@ -168,7 +170,7 @@ TEST_CASE("operator -", "Vector"){
   REQUIRE_THAT(v3.y, Catch::Matchers::WithinAbs(-10.0, 1e-5));
 }
 
-TEST_CASE("operator -=", "Vector"){
+TEST_CASE("operator -=", "Vector") {
   Vector2D v1{2, 5};
   Vector2D v2{11, 15};
   v1 -= v2;
@@ -176,16 +178,16 @@ TEST_CASE("operator -=", "Vector"){
   REQUIRE_THAT(v1.y, Catch::Matchers::WithinAbs(-10.0, 1e-5));
 }
 
-TEST_CASE("operator *", "Vector"){
+TEST_CASE("operator *", "Vector") {
   Vector2D v1{2, 5};
   double scalar = 2;
-  Vector2D v3 = v1*scalar;
+  Vector2D v3 = v1 * scalar;
   REQUIRE_THAT(v3.x, Catch::Matchers::WithinAbs(4, 1e-5));
   REQUIRE_THAT(v3.y, Catch::Matchers::WithinAbs(10.0, 1e-5));
 }
 
 
-TEST_CASE("operator *=", "Vector"){
+TEST_CASE("operator *=", "Vector") {
   Vector2D v1{2, 5};
   double scalar = 2;
   v1 *= scalar;
@@ -193,7 +195,7 @@ TEST_CASE("operator *=", "Vector"){
   REQUIRE_THAT(v1.y, Catch::Matchers::WithinAbs(10.0, 1e-5));
 }
 
-TEST_CASE("dot", "Vector"){
+TEST_CASE("dot", "Vector") {
   Vector2D v1{2, 5};
   Vector2D v2{20, 15};
   double v3 = dot(v1, v2);
@@ -201,17 +203,107 @@ TEST_CASE("dot", "Vector"){
 }
 
 
-TEST_CASE("magnitude", "Vector"){
+TEST_CASE("magnitude", "Vector") {
   Vector2D v1{2, 5};
   double mag = magnitude(v1);
   REQUIRE_THAT(mag, Catch::Matchers::WithinAbs(5.3851648, 1e-5));
 }
 
 
-TEST_CASE("angle", "Vector"){
+TEST_CASE("angle", "Vector") {
   Vector2D v1{0, 1};
   Vector2D v2{1, 0};
-  double ang_read  =  angle(v1, v2);
+  double ang_read = angle(v1, v2);
   REQUIRE_THAT(ang_read, Catch::Matchers::WithinAbs(deg2rad(90), 1e-5));
 }
+
+TEST_CASE("if_collide", "Lidar"){
+  Point2D robot{0, 0};
+  Point2D column{-2, 4};
+  double column_radius = 3;
+  double max_range = 10;
+  double theta = deg2rad(0);
+  bool collide = if_intersect(column, robot, max_range, theta, column_radius);
+  REQUIRE(collide == 1);
+  Point2D b = intersectPoint(column, robot, max_range, theta, column_radius);
+  REQUIRE_THAT(b.x, Catch::Matchers::WithinAbs(0, 1e-5));
+  REQUIRE_THAT(b.y, Catch::Matchers::WithinAbs(1.7639320225, 1e-5));
+  // cout << b.x << " " << b.y << endl;
+}
+
+TEST_CASE("if_collide_test2", "Lidar"){
+  Point2D robot{0, 5};
+  Point2D column{5, 5};
+  double column_radius = 1;
+  double max_range = 10;
+  double theta = deg2rad(90);
+  bool collide = if_intersect(column, robot, max_range, theta, column_radius);
+  REQUIRE(collide == 1);
+  Point2D b = intersectPoint(column, robot, max_range, theta, column_radius);
+  // cout << a.x << " " << a.y << endl;
+  cout << b.x << " " << b.y << endl;
+  // REQUIRE_THAT(a.x, Catch::Matchers::WithinAbs(6, 1e-5));
+  // REQUIRE_THAT(a.y, Catch::Matchers::WithinAbs(5, 1e-5));
+
+  REQUIRE_THAT(b.x, Catch::Matchers::WithinAbs(4, 1e-5));
+  REQUIRE_THAT(b.y, Catch::Matchers::WithinAbs(5, 1e-5));
+
+}
+
+
+
+TEST_CASE("if_collide_test3", "Lidar"){
+  Point2D robot{0, 0};
+  Point2D column{5, 5};
+  double column_radius = 1;
+  double max_range = 10;
+  double theta = deg2rad(45);
+  bool collide = if_intersect(column, robot, max_range, theta, column_radius);
+  REQUIRE(collide == 1);
+  // Point2D a = intersectPointA(column, robot, max_range, theta, column_radius);
+  Point2D b = intersectPoint(column, robot, max_range, theta, column_radius);
+  // cout << a.x << " " << a.y << endl;
+  cout << b.x << " " << b.y << endl;
+  // REQUIRE_THAT(a.x, Catch::Matchers::WithinAbs(5.707, 1e-2));
+  // REQUIRE_THAT(a.y, Catch::Matchers::WithinAbs(5.707, 1e-2));
+
+  REQUIRE_THAT(b.x, Catch::Matchers::WithinAbs(4.292, 1e-2));
+  REQUIRE_THAT(b.y, Catch::Matchers::WithinAbs(4.292, 1e-2));
+
+}
+
+TEST_CASE("if_collide_test4", "Lidar"){
+  Point2D robot{0, 0};
+  Point2D column{0, 5};
+  double column_radius = 4;
+  double max_range = 10;
+  double theta = deg2rad(30);
+  bool collide = if_intersect(column, robot, max_range, theta, column_radius);
+  REQUIRE(collide == 1);
+  // Point2D a = intersectPointA(column, robot, max_range, theta, column_radius);
+  Point2D b = intersectPoint(column, robot, max_range, theta, column_radius);
+
+  REQUIRE_THAT(b.x, Catch::Matchers::WithinAbs(0.60381, 1e-2));
+  REQUIRE_THAT(b.y, Catch::Matchers::WithinAbs(1.04583, 1e-2));
+
+}
+
+TEST_CASE("if_collide_test5", "Lidar"){
+  Point2D robot{2, 0};
+  Point2D column{0, 5};
+  double column_radius = 4;
+  double max_range = 10;
+  double theta =  deg2rad(-60);
+  bool collide = if_intersect(column, robot, max_range, theta, column_radius);
+  REQUIRE(collide == 1);
+  // Point2D a = intersectPointA(column, robot, max_range, theta, column_radius);
+  Point2D b = intersectPoint(column, robot, max_range, theta, column_radius);
+
+  REQUIRE_THAT(b.x, Catch::Matchers::WithinAbs(0.254, 1e-2));
+  REQUIRE_THAT(b.y, Catch::Matchers::WithinAbs(1.0081, 1e-2));
+
+}
+
+
+
 }

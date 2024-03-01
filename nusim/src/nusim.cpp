@@ -569,7 +569,7 @@ private:
       // double angle = -(i * lidar_angle_increment_ - turtlelib::PI/2); 
 
       ///Solution 2: in world frame
-
+    ///Problem with lidar, it initially predicts but with the rotation, the lidar goes off
     for(size_t column_index = 0; column_index < cyl_num; column_index++){
       turtlelib::Point2D obst_location{obx[column_index], oby[column_index]};///remember to change!!!
       turtlelib::Point2D robot_location{x, y}; ///x, y represents the red robot's current location
@@ -578,21 +578,11 @@ private:
       turtlelib::Point2D scan_point 
       = turtlelib::intersectPoint(obst_location, robot_location, lidar_max_range_, angle, obr);
 
-      turtlelib::Point2D limit{
-                          x + lidar_max_range_ * cos(i*lidar_angle_increment_),
-                          y + lidar_max_range_ * sin(i*lidar_angle_increment_)
-                        };
-
       if(scan_point.x < 10000 && scan_point.y < 10000){
-        if(scan_point.x/ (limit.x - x + 1e-7) > 0.0){
-          scan_msg.ranges.at(i) = turtlelib::magnitude(scan_point - robot_location);
-          RCLCPP_INFO_STREAM(get_logger(), "am currently at angle rad" << i);
-          RCLCPP_INFO_STREAM(get_logger(), "LIMIT" << limit.x << " " << limit.y << " " << "x" << x << "y" << y);
-          RCLCPP_INFO_STREAM(get_logger(), "scan_point" << scan_point.x << " " << scan_point.y << " " << turtlelib::rad2deg(angle));
-        }
+        scan_msg.ranges.at(i) = turtlelib::magnitude(scan_point - robot_location);
       }
     }
-    }
+  }
     
     laser_pub->publish(scan_msg);
   }

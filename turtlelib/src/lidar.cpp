@@ -33,6 +33,10 @@ namespace turtlelib{
 
         ///project U onto laser
         double proj_mag = (dot(U, laser)/magnitude(laser));
+        ///added new lines
+        if(proj_mag < 0){
+            return Point2D{10000, 10000};
+        }
         std::cout << "proj_mag: " << proj_mag << std::endl;
         Vector2D unit_vector_laser = {laser.x/magnitude(laser), laser.y/magnitude(laser)};
         std::cout << "unit_vector_laser: " << unit_vector_laser.x << " " << unit_vector_laser.y << std::endl;

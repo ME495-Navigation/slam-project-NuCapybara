@@ -8,6 +8,7 @@
 
 
 namespace turtlelib{
+
     bool if_intersect(Point2D column, Point2D robot, double max_range, double theta, double column_radius){
         //====================== laser vector should be robot.x+xxx, robot.y+yyy ======================
         Vector2D laser{sin(theta)*max_range, cos(theta)*max_range}; ///theta here for radians, a laser vetor in robot frame
@@ -24,6 +25,7 @@ namespace turtlelib{
 
         return (d <= column_radius);
     }
+
 
     Point2D intersectPoint(Point2D column, Point2D robot, double max_range, double theta, double column_radius){
         Vector2D laser{sin(theta)*max_range, cos(theta)*max_range}; ///theta here for radians, a laser vetor in robot frame

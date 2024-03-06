@@ -19,6 +19,7 @@ add_library(turtlelib src/geometry2d.cpp
                       src/svg.cpp
                       src/diff_drive.cpp
                       src/lidar.cpp
+                      src/ekf_slam.cpp
                       )
 
 # Use target_include_directories so that #include"mylibrary/header.hpp" works
@@ -106,12 +107,18 @@ include(CTest)
 if(BUILD_TESTING)
     # Find the Unit testing framework. In this example, Catch2
     find_package(Catch2 3 REQUIRED)
+    find_package(BLAS REQUIRED)
+    find_package(LAPACK REQUIRED)
+    find_package(Armadillo)
+
+
 
     # A test is just an executable that is linked against the unit testing library
     add_executable(my_test_exe tests/test_geometry2d.cpp 
                                tests/test_se2d.cpp 
-                               tests/test_svg.cpp)
-    target_link_libraries(my_test_exe Catch2::Catch2WithMain turtlelib)
+                               tests/test_svg.cpp
+                               tests/test_ekf.cpp)
+    target_link_libraries(my_test_exe Catch2::Catch2WithMain turtlelib ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${ARMADILLO_LIBRARIES})
     target_include_directories(my_test_exe
     PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>

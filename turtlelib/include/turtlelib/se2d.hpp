@@ -126,6 +126,10 @@ namespace turtlelib
     /// @param tw 
     /// @return Transform2D
     Transform2D integrate_twist(Twist2D tw);
+    /// @brief compute the twist corresponding to the transformation change
+    /// @param T_bB 
+    /// @return Twist2D
+    Twist2D differentiate_transform(const Transform2D & T_bB);
 }
 
 #endif

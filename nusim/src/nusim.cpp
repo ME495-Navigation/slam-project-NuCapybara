@@ -527,6 +527,8 @@ private:
       return true;
     }
   }
+  /// @brief  update robot position once hit column
+  /// @return nothing
   void collision()
     {
       for (size_t i = 0; i < obx.size(); ++i) {

@@ -40,10 +40,10 @@ namespace turtlelib
     /// \brief a rigid body transformation in 2 dimensions
     class Transform2D
     {
-    private:
+    public:
         Vector2D linear;
         double angular;
-    public:
+    
         /// \brief Create an identity transformation
         Transform2D();
 

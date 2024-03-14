@@ -211,11 +211,16 @@ namespace turtlelib
         R = arma::mat{2, 2, arma::fill::eye} * R_noise;
         // K_i = sigma * H_i.t() *(H_i * sigma * H_i.t() + R).i();
         K_i = sigma * H_i.t() * (H_i * sigma * H_i.t() + R).i();
-        std::cout << "Ki" << K_i << std::endl;
+        // std::cout << "Ki" << K_i << std::endl;
 
         ///update the state vector ξ, robot state
         // Xi = Xi + K_i * (z_j - z_j_hat);
-        Xi = Xi + K_i * (z_j - z_j_hat);  
+        arma::colvec z_j_diff{2, arma::fill::zeros};
+
+        z_j_diff(0) = z_j(0) - z_j_hat(0);
+        z_j_diff(1) = normalize_angle(z_j(1) - z_j_hat(1));
+
+        Xi = Xi + K_i * (z_j_diff);  
         update_pose_and_map();
         // std::cout << "Xi" << Xi << std::endl;
 

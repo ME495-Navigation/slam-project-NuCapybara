@@ -21,9 +21,10 @@ namespace turtlelib
 
     /// @brief class to model the kinematics of a differential drive robot
     class DiffDrive{
-    private:
+    public:
         /// @brief wheel status on right and left side
         WheelState w;
+
         /// @brief current configuration of robot in real world
         Transform2D q;
         /// @brief wheel radius

@@ -198,7 +198,7 @@ private:
                 const auto prev_y = robot.get_current_config().translation().y;
                 const auto prev_phi = robot.get_current_config().rotation();
 
-                RCLCPP_INFO_STREAM(get_logger(), "dl" << dl << "dr" << dr);
+                // RCLCPP_INFO_STREAM(get_logger(), "dl" << dl << "dr" << dr);
 
                 // update robot config and everything
                 robot.forwardKinematics(turtlelib::WheelState{dl, dr});
@@ -270,19 +270,19 @@ private:
 
     void fake_sensor_callback(const visualization_msgs::msg::MarkerArray & msg)
     {
-        RCLCPP_INFO_STREAM(get_logger(), "getinto fake sensor");
+        // RCLCPP_INFO_STREAM(get_logger(), "getinto fake sensor");
         T_or_now= robot.get_current_config();
         turtlelib::Transform2D T_rr_prime = T_or_prev.inv() * T_or_now;
         ekf->predict(turtlelib::differentiate_transform(T_rr_prime));
-        RCLCPP_INFO_STREAM(get_logger(), "ekf current rs" << ekf->get_robot_state().translation().x << " " << ekf->get_robot_state().translation().y << " " << ekf->get_robot_state().rotation());
+        // RCLCPP_INFO_STREAM(get_logger(), "ekf current rs" << ekf->get_robot_state().translation().x << " " << ekf->get_robot_state().translation().y << " " << ekf->get_robot_state().rotation());
         T_or_prev = T_or_now;
-        RCLCPP_INFO_STREAM(get_logger(), "Tor prev"<< T_or_prev.translation().x << " " << T_or_prev.translation().y << " " << T_or_prev.rotation());
+        // RCLCPP_INFO_STREAM(get_logger(), "Tor prev"<< T_or_prev.translation().x << " " << T_or_prev.translation().y << " " << T_or_prev.rotation());
         
         for(size_t j = 1; j <= msg.markers.size(); j++){
             // RCLCPP_INFO_STREAM(get_logger(), "marker size" << msg.markers.size());
             // RCLCPP_INFO_STREAM(get_logger(), "getinto fake sensor for loop" << j);
             if(msg.markers[j-1].action == visualization_msgs::msg::Marker::ADD){
-                RCLCPP_INFO_STREAM(get_logger(), "CCCCCCCC" << j);
+                // RCLCPP_INFO_STREAM(get_logger(), "CCCCCCCC" << j);
                 ekf->correct(msg.markers[j-1].pose.position.x, msg.markers[j-1].pose.position.y, j);
             }
         }

@@ -236,17 +236,21 @@ private:
       // theta = robot.get_current_config().rotation();
       // send_transform(x, y, theta);
       ///if no collision, update the robot's location
-      if(!collide){
-        ///get the robot's new location, 
-        x = robot.get_current_config().translation().x;
-        y = robot.get_current_config().translation().y;
-        theta = robot.get_current_config().rotation();
-        send_transform(x, y, theta);
-      }
-      else{
-        send_transform(x, y, theta);
-      }
-      
+      // if(!collide){
+      //   ///get the robot's new location, 
+      //   x = robot.get_current_config().translation().x;
+      //   y = robot.get_current_config().translation().y;
+      //   theta = robot.get_current_config().rotation();
+      //   send_transform(x, y, theta);
+      // }
+      // else{
+      //   send_transform(x, y, theta);
+      // }
+      collision();
+      x = robot.get_current_config().translation().x;
+      y = robot.get_current_config().translation().y;
+      theta = robot.get_current_config().rotation();
+      send_transform(x, y, theta);
       //update the sensor call back
       sensor_data.left_encoder = static_cast<int>(new_left_angle*encoder_ticks_per_rad);
       sensor_data.right_encoder = static_cast<int>(new_right_angle*encoder_ticks_per_rad);
@@ -460,9 +464,9 @@ private:
         // RCLCPP_INFO_STREAM(get_logger(), "new obstacle added");
 
         ///updating if the robot is colliding the obstacle
-        if(if_collide(i)){
-          collide = true;
-        }
+        // if(if_collide(i)){
+        //   collide = true;
+        // }
       }
       else{
         m.action = visualization_msgs::msg::Marker::DELETE;
@@ -522,6 +526,82 @@ private:
     else{
       return true;
     }
+  }
+  void collision()
+    {
+      for (size_t i = 0; i < obx.size(); ++i) {
+        auto rs = robot.get_current_config();
+
+        double dx = obx[i] - rs.translation().x;
+        double dy = oby[i] - rs.translation().y;
+        double d = std::sqrt(dx * dx + dy * dy);
+
+        double total_radius = collision_radius + obr;
+
+        if (d < total_radius) {
+          RCLCPP_INFO_STREAM(get_logger(), "Collision detected with obstacle " << i);
+
+          double vx = dx / d;
+          double vy = dy / d;
+
+          double tx = obx[i] - total_radius * vx;
+          double ty = oby[i] - total_radius * vy;
+
+          robot.q.linear.x = tx;
+          robot.q.linear.y = ty;
+          robot.q.angular = rs.rotation();
+        }
+      }
+    }
+
+
+  bool detect_and_simulate_collision(turtlelib::WheelState predicted_delta_wheels_)
+  {    
+    // Predicted robot motion
+    turtlelib::DiffDrive predicted_turtle_ = robot;
+    predicted_turtle_.forwardKinematics(predicted_delta_wheels_);   
+
+    turtlelib::Transform2D T_world_robot_{{predicted_turtle_.get_current_config().translation().x, predicted_turtle_.get_current_config().translation().y}, predicted_turtle_.get_current_config().rotation()};
+    turtlelib::Transform2D T_robot_world_ = T_world_robot_.inv(); 
+
+    for (size_t i = 0; i < obx.size(); i++)
+    {
+      // Find local coordinates of obstacle
+      turtlelib::Point2D obstacle_pos_world_{obx.at(i), oby.at(i)};
+      turtlelib::Point2D obstacle_pos_robot_ = T_robot_world_(obstacle_pos_world_);
+
+      // Detect collision
+      if (std::sqrt(std::pow(obstacle_pos_robot_.x, 2) + std::pow(obstacle_pos_robot_.y, 2)) < (collision_radius + obr)) 
+      {
+        // If colliding, calculate shift of robot frame, in robot frame
+        turtlelib::Vector2D robotshift_robot_{
+        -((collision_radius + obr) * cos(atan2(obstacle_pos_robot_.y, obstacle_pos_robot_.x)) - obstacle_pos_robot_.x),
+        -((collision_radius + obr) * sin(atan2(obstacle_pos_robot_.y, obstacle_pos_robot_.x)) - obstacle_pos_robot_.y)
+        };
+
+        // Calculate transform corresponding to this shift
+        turtlelib::Transform2D T_robot_newrobot_{robotshift_robot_};
+
+        // Define this transformation in the world frame
+        turtlelib::Transform2D T_world_newrobot_ = T_world_robot_ * T_robot_newrobot_;
+
+        if(lie_group_collision_)
+        {
+          x = T_world_newrobot_.translation().x;
+          y = T_world_newrobot_.translation().y;
+          theta = T_world_newrobot_.rotation();
+        }
+          
+        robot.w.l = turtlelib::normalize_angle(robot.get_wheel_state().l + predicted_delta_wheels_.l); // TODO: wheel rotation not working properly
+        robot.w.r = turtlelib::normalize_angle(robot.get_wheel_state().l + predicted_delta_wheels_.r);
+
+        RCLCPP_DEBUG(this->get_logger(), "turtle: %f B: %f", obstacle_pos_robot_.x, obstacle_pos_robot_.y);
+        return true; // Colliding with one obstacle, therefore, ignore other obstacles
+      } 
+    }
+    return false; // Not colliding
+
+    throw std::runtime_error("Invalid collision! Check collision simulation!");
   }
   ///return true if the obstacle is inside the range of the fake sensor, false if out of range
   bool dist_obs_robot(int i, double range){
@@ -587,6 +667,7 @@ private:
     laser_pub->publish(scan_msg);
   }
 
+  bool lie_group_collision_ = true;
   double x_i, y_i, theta_i;
   double x, y, theta, rate_hz, encoder_ticks_per_rad, rate_fakesensor_hz;
   double arena_x_length, arena_y_length;
@@ -622,7 +703,7 @@ private:
   double gaussian_noise_velocity = 0.0;
   double slip_noise = 0.0;
   double range = 3.0; //maximum range of the fake sensor to detect the obstacle
-  bool collide = false;
+  // bool collide = false;
   double lidar_angle_increment_, lidar_max_range_, lidar_min_range_, resolution, noise_level;
   int lidar_num_samples_;
 };

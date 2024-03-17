@@ -226,7 +226,7 @@ namespace turtlelib
 
         ///update the covariance matrix
         sigma = (I - K_i * H_i) * sigma;
-        std::cout << "Sigma in correct" << sigma << std::endl;
+        // std::cout << "Sigma in correct" << sigma << std::endl;
     }
 
 

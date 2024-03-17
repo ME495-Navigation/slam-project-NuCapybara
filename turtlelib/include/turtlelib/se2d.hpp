@@ -41,7 +41,9 @@ namespace turtlelib
     class Transform2D
     {
     public:
+        /// @brief the linear x y component of turtlebot
         Vector2D linear;
+        /// @brief the angular component of turtlebot
         double angular;
     
         /// \brief Create an identity transformation

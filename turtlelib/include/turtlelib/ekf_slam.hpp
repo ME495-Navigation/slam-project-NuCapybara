@@ -97,7 +97,7 @@ namespace turtlelib{
         arma::mat get_predicted_measurement() const;
         /// \brief set the initial state of the robot
         arma::mat get_Hi() const;
-
+        /// @brief update the pose and map
         void update_pose_and_map();
     };
         

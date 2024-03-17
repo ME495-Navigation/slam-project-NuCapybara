@@ -20,6 +20,7 @@ add_library(turtlelib src/geometry2d.cpp
                       src/diff_drive.cpp
                       src/lidar.cpp
                       src/ekf_slam.cpp
+                      src/circle_fitting.cpp
                       )
 
 # Use target_include_directories so that #include"mylibrary/header.hpp" works
@@ -54,8 +55,7 @@ target_link_libraries(frame_main turtlelib)
 # (e.g., a library or executable)
 # This will automatically add all required library files
 # that need to be linked
-# and paths to th locations of header files
-# target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
+# and paths to th locations of header filesSimulation
 
 # install the include files by copying the whole include directory
 install(DIRECTORY include/turtlelib DESTINATION include)

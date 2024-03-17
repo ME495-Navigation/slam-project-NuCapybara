@@ -2,14 +2,28 @@
 * Jialu Yu
 * Winter 2022
 # Package List
-This repository consists of several ROS packages
-- diff_drive - related to the Kinematics of wheeled mobile robots, and is part of the turtlelib package
-- frame_main - generate a user-specified vector in visualization with a svg file
-- geometry2d - utilities for two-dimensional geometric operations, such as comparing floating-point numbers, converting between degrees and radians, normalizing angles, and manipulating 2D points and vectors.
+This repository has one helper Libraries(Non-ROS)
+- turtlelib:  A library for handling transformations in SE(2) and other turtlebot/lidar-related math.
+
+    - diff_drive - related to the Kinematics of wheeled mobile robots, and is part of the turtlelib package
+    - frame_main - generate a user-specified vector in visualization with a svg file
+    - geometry2d - utilities for two-dimensional geometric operations, such as comparing floating-point numbers, converting between degrees and radians, normalizing angles, and manipulating 2D points and vectors.
+    - ekf_slam - perform Extended Kalman Filter algorithm 
+    - lidar - perform the line to circle intersection algorithm
+    - circle_fitting - perform circle fitting algorithm
+
+This repository consists of several ROS packages 
+- nuturtle_description - Visualize turtlebots with user-specified parameters
+- nusim - Simulates a Turtlebot3 in an rviz environment, mimicing  the real turtlebot
+- nuturtle_control - provides an odometry estimate for the turtlebot that can interface with either a simulated or real robot.
+- nuslam - Performs EKF slam to generate a map of the environment.
+
 
 
 
 ## Demo Videos
+### EKF Slam Simulation video (HW3)
+<video src="https://github.com/ME495-Navigation/slam-project-NuCapybara/assets/144244355/6fff1e55-81b1-4a5a-9ea5-c7a1170afcac" controls title="EKF Simulation"></video>
 
 ### Turtlebot simulation Video
 <video src="https://github.com/ME495-Navigation/slam-project-NuCapybara/assets/144244355/08c6739b-bc16-438b-948c-263814212cb3" controls title="Simulation"></video>

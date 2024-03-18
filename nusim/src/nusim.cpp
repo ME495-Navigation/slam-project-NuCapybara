@@ -672,9 +672,6 @@ private:
       double lidar_reading = 3.5;
       double slope = (limit.y - lidar_pose_.linear.y) / (limit.x - lidar_pose_.linear.x  + 1e-7);
 
-      if(column_index == 0){
-        RCLCPP_INFO_STREAM(get_logger(), "scan_point" << scan_point.x << " " << scan_point.y << "i is " << i);
-      }
 
       if (scan_point.x == 10000 && !wall_measured)
       {
@@ -725,17 +722,11 @@ private:
             }
           }
           scan_msg.ranges.at(i) = lidar_reading;
-          if(column_index == 0){
-            RCLCPP_INFO_STREAM(get_logger(), "I got in wall scanning!!!why" << "my i is" << i);
-          }
           wall_measured = true;
       }
 
       if(scan_point.x < 10000 && scan_point.y < 10000){
         scan_msg.ranges.at(i) = turtlelib::magnitude(scan_point - robot_location);
-        if(column_index == 0){
-          RCLCPP_INFO_STREAM(get_logger(), "I publish!!!!!" << i);
-        }
         break;
       }
     }

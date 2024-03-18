@@ -639,6 +639,11 @@ private:
     scan_msg.range_min = lidar_min_range_;
     scan_msg.range_max = lidar_max_range_;
     scan_msg.ranges.resize(lidar_num_samples_);
+    bool wall_measured = false;
+    turtlelib::Transform2D lidar_pose_{turtlelib::Vector2D{
+                    (robot.get_current_config().translation().x - 0.032*cos(robot.get_current_config().angular)), 
+                    (robot.get_current_config().translation().y - 0.032*sin(robot.get_current_config().angular))},
+                    robot.get_current_config().angular};
 
 
     for (int i = 0; i < lidar_num_samples_; i++) {
@@ -649,95 +654,80 @@ private:
       // turtlelib::Point2D obst_location{Trc_location.x, Trc_location.y};///remember to change!!!
       // turtlelib::Point2D robot_location{0, 0};
       // double angle = -(i * lidar_angle_increment_ - turtlelib::PI/2); 
-      bool wall_measured = false;
-      ///Solution 2: in world frame
-    ///Problem with lidar, it initially predicts but with the rotation, the lidar goes off
-    for(size_t column_index = 0; column_index < cyl_num; column_index++){
-      turtlelib::Point2D obst_location{obx[column_index], oby[column_index]};///remember to change!!!
-      turtlelib::Point2D robot_location{x, y}; ///x, y represents the red robot's current location
-      ///the way I wrote my function is not follow convention, so convert them into the real angle 
-      double angle = -(i * lidar_angle_increment_ + theta - turtlelib::PI/2); 
-      turtlelib::Point2D scan_point 
-      = turtlelib::intersectPoint(obst_location, robot_location, lidar_max_range_, angle, obr);
-
-
-      turtlelib::Transform2D lidar_pose_{turtlelib::Vector2D{
-                (robot.get_current_config().translation().x - 0.032*cos(robot.get_current_config().angular)), 
-                (robot.get_current_config().translation().y - 0.032*sin(robot.get_current_config().angular))},
-                robot.get_current_config().angular};
       turtlelib::Point2D limit{
                             lidar_pose_.linear.x + lidar_max_range_ * cos(i * lidar_angle_increment_ + lidar_pose_.angular),
                             lidar_pose_.linear.y + lidar_max_range_ * sin(i * lidar_angle_increment_ + lidar_pose_.angular)
                           };
+      ///Solution 2: in world frame
+    ///Problem with lidar, it initially predicts but with the rotation, the lidar goes off
+    for(size_t column_index = 0; column_index < cyl_num; column_index++){
+
+      turtlelib::Point2D obst_location{obx[column_index], oby[column_index]};///remember to change!!!
+      turtlelib::Point2D robot_location{x, y}; ///x, y represents the red robot's current location
+      ///the way I wrote my function is not follow convention, so convert them into the real angle 
+      double angle = -(i * lidar_angle_increment_ + theta - turtlelib::PI/2); 
+      bool detect_column = turtlelib::if_intersect(obst_location, robot_location, lidar_max_range_, angle, obr);
+      // Offset between LIDAR and Footprint (fixed, unless things go very ugly)
       double lidar_reading = 3.5;
       double slope = (limit.y - lidar_pose_.linear.y) / (limit.x - lidar_pose_.linear.x  + 1e-7);
 
-      if(column_index == 0){
-        RCLCPP_INFO_STREAM(get_logger(), "scan_point" << scan_point.x << " " << scan_point.y << "i is " << i);
-      }
 
-      if (scan_point.x == 10000 && !wall_measured)
-      {
-        // Estimate where laser hits the wall, if not already estimated
+
+      // if (scan_point.x == 10000 && !wall_measured)
+      // {
+      //   // Estimate where laser hits the wall, if not already estimated
         
-          // North Wall reading
-          if(limit.y > arena_y_length/2.0)
-          {
-            turtlelib::Vector2D laser_vector{ 0, arena_y_length/2.0 - lidar_pose_.linear.y};
-            laser_vector.x = laser_vector.y / (slope  + 1e-7);
+      //     // North Wall reading
+      //     if(limit.y > arena_y_length/2.0)
+      //     {
+      //       turtlelib::Vector2D laser_vector{ 0, arena_y_length/2.0 - lidar_pose_.linear.y};
+      //       laser_vector.x = laser_vector.y / (slope  + 1e-7);
 
-            if(lidar_reading > turtlelib::magnitude(laser_vector))
-            {
-              lidar_reading = turtlelib::magnitude(laser_vector);
-            }
-          }
-          // West Wall reading
-          if(limit.x < -arena_x_length/2.0)
-          {
-            turtlelib::Vector2D laser_vector{ -arena_x_length/2.0 - lidar_pose_.linear.x, 0};
-            laser_vector.y = laser_vector.x * slope;
+      //       if(lidar_reading > turtlelib::magnitude(laser_vector))
+      //       {
+      //         lidar_reading = turtlelib::magnitude(laser_vector);
+      //       }
+      //     }
+      //     // West Wall reading
+      //     if(limit.x < -arena_x_length/2.0)
+      //     {
+      //       turtlelib::Vector2D laser_vector{ -arena_x_length/2.0 - lidar_pose_.linear.x, 0};
+      //       laser_vector.y = laser_vector.x * slope;
 
-            if(lidar_reading > turtlelib::magnitude(laser_vector))
-            {
-              lidar_reading = turtlelib::magnitude(laser_vector);
-            }
-          }
-          // South Wall reading
-          if(limit.y < -arena_y_length/2.0)
-          {
-            turtlelib::Vector2D laser_vector{0, -arena_y_length/2.0 - lidar_pose_.linear.y};
-            laser_vector.x = laser_vector.y / (slope  + 1e-7);
+      //       if(lidar_reading > turtlelib::magnitude(laser_vector))
+      //       {
+      //         lidar_reading = turtlelib::magnitude(laser_vector);
+      //       }
+      //     }
+      //     // South Wall reading
+      //     if(limit.y < -arena_y_length/2.0)
+      //     {
+      //       turtlelib::Vector2D laser_vector{0, -arena_y_length/2.0 - lidar_pose_.linear.y};
+      //       laser_vector.x = laser_vector.y / (slope  + 1e-7);
 
-            if(lidar_reading > turtlelib::magnitude(laser_vector))
-            {
-              lidar_reading = turtlelib::magnitude(laser_vector);
-            }
-          }
-          // East Wall reading
-          if(limit.x > arena_x_length/2.0)
-          {
-            turtlelib::Vector2D laser_vector{ arena_x_length/2.0 - lidar_pose_.linear.x, 0};
-            laser_vector.y = laser_vector.x * slope;
+      //       if(lidar_reading > turtlelib::magnitude(laser_vector))
+      //       {
+      //         lidar_reading = turtlelib::magnitude(laser_vector);
+      //       }
+      //     }
+      //     wall_measured = true;
+      // }
+      
 
-            if(lidar_reading > turtlelib::magnitude(laser_vector))
-            {
-              lidar_reading = turtlelib::magnitude(laser_vector);
-            }
-          }
-          scan_msg.ranges.at(i) = lidar_reading;
-          if(column_index == 0){
-            RCLCPP_INFO_STREAM(get_logger(), "I got in wall scanning!!!why" << "my i is" << i);
-          }
-          wall_measured = true;
-      }
+      // turtlelib::Point2D scan_point 
+      // = turtlelib::intersectPoint(obst_location, robot_location, lidar_max_range_, angle, obr);
+      turtlelib::Point2D scan_point 
+      = turtlelib::intersectPoint(obst_location, robot_location, lidar_max_range_, angle, obr);
 
       if(scan_point.x < 10000 && scan_point.y < 10000){
         scan_msg.ranges.at(i) = turtlelib::magnitude(scan_point - robot_location);
-        if(column_index == 0){
-          RCLCPP_INFO_STREAM(get_logger(), "I publish!!!!!" << i);
-        }
-        break;
       }
+      // else{
+      //   scan_msg.ranges.at(i) =  resolution* round(lidar_reading/ resolution);
+      // }
+      
+      
+
     }
   }
     

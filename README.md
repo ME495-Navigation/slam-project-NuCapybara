@@ -23,7 +23,7 @@ This repository consists of several ROS packages
 
 ## Demo Videos
 ### EKF Slam Simulation video (HW3)
-<video src="https://github.com/ME495-Navigation/slam-project-NuCapybara/assets/144244355/6fff1e55-81b1-4a5a-9ea5-c7a1170afcac" controls title="EKF Simulation"></video>
+<video src="https://github.com/ME495-Navigation/slam-project-NuCapybara/assets/144244355/a1ad52a8-5b35-4b64-8e63-6002c8d7f1ff" controls title="EKF Simulation"></video>
 
 ### Turtlebot simulation Video
 <video src="https://github.com/ME495-Navigation/slam-project-NuCapybara/assets/144244355/08c6739b-bc16-438b-948c-263814212cb3" controls title="Simulation"></video>
